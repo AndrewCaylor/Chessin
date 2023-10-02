@@ -67,6 +67,7 @@ namespace Piece
   };
 
   char toChar(ID piece);
+  Type toType(char piece);
   
   Color getColor(ID piece);
 

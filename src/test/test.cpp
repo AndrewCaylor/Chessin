@@ -53,4 +53,29 @@ TEST(Tests, test_best_move) {
   node.bestMove(); 
 }
 
+TEST(Tests, test_string_conttructor){
+  BoardData b = BoardData({
+    "RNBQKBNR",
+    "PPPPPPPP",
+    "        ",
+    "        ",
+    "        ",
+    "        ",
+    "pppppppp",
+    "rnbqkbnr"
+  });
+
+  EXPECT_EQ(b.toString(), 
+    "rnbqkbnr 8\n"
+    "pppppppp 7\n"
+    "........ 6\n"
+    "........ 5\n"
+    "........ 4\n"
+    "........ 3\n"
+    "PPPPPPPP 2\n"
+    "RNBQKBNR 1\n"
+    "\n"
+    "abcdefgh\n"
+  );
+}
 

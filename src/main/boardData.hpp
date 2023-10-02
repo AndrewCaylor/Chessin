@@ -20,6 +20,7 @@ private:
 
 public:
   BoardData();
+  BoardData(vector<string> board);
   BoardData(const BoardData &board);
   string toString();
 

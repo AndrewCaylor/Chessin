@@ -55,6 +55,33 @@ char Piece::toChar(ID piece)
   }
 }
 
+Piece::Type Piece::toType(char c){
+  switch (c)
+  {
+  case 'K':
+  case 'k':
+    return KING;
+  case 'Q':
+  case 'q':
+    return QUEEN;
+  case 'P':
+  case 'p':
+    return PAWN;
+  case 'N':
+  case 'n':
+    return KNIGHT;
+  case 'B':
+  case 'b':
+    return BISHOP;
+  case 'R':
+  case 'r':
+    return ROOK;
+  default:
+    return TYPE_EMPTY;
+  }
+}
+
+
 Piece::Color Piece::getColor(ID piece)
 {
   if (piece == ID_EMPTY)
