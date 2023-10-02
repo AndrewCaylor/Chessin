@@ -144,8 +144,6 @@ vector<Location> Board::cast(Location loc, Color color, int incx, int incy)
   int x = get<0>(loc);
   int y = get<1>(loc);
 
-  cout << "here" << endl;
-
   x += incx;
   y += incy;
   while (x < 8 && y < 8 && x >= 0 && y >= 0)
@@ -189,8 +187,6 @@ vector<Location> Board::listPossibleRookMoves(Location loc)
 {
   vector<Location> validMoves = {};
   Color color = getColor(this->boardGet(loc));
-
-  cout << "color: " << color << endl;
 
   vector<Location> validMoves1 = this->cast(loc, color, 1, 0);
   vector<Location> validMoves2 = this->cast(loc, color, -1, 0);
@@ -415,11 +411,11 @@ bool Board::isValid(Move move)
       return true;
     }
   }
-  cout << "Invalid. Valid moves are: " << endl;
-  for (Location move : validMoves)
-  {
-    cout << (int) get<0>(move) << ", " << (int) get<1>(move) << endl;
-  }
+  // cout << "Invalid. Valid moves are: " << endl;
+  // for (Location move : validMoves)
+  // {
+  //   cout << (int) get<0>(move) << ", " << (int) get<1>(move) << endl;
+  // }
   return false;
 };
 
