@@ -7,7 +7,6 @@
 
 #define Empty ID_EMPTY
 using namespace Piece;
-#define toID(i) static_cast<ID>(i)
 
 vector<Location> Board::listPossiblePawnMoves(Location loc)
 {
@@ -68,6 +67,9 @@ vector<Location> Board::listPossiblePawnMoves(Location loc)
     {
       validMoves.push_back(make_tuple(x - 1, y - 1));
     }
+  }
+  else{
+    throw "Color cannot be NONE";
   }
 
   return validMoves;
@@ -142,10 +144,12 @@ vector<Location> Board::cast(Location loc, Color color, int incx, int incy)
   int x = get<0>(loc);
   int y = get<1>(loc);
 
+  cout << "here" << endl;
+
+  x += incx;
+  y += incy;
   while (x < 8 && y < 8 && x >= 0 && y >= 0)
   {
-    x += incx;
-    y += incy;
     ID piece = this->boardGet(make_tuple(x, y));
     if (piece != Empty)
     {
@@ -156,6 +160,8 @@ vector<Location> Board::cast(Location loc, Color color, int incx, int incy)
       break;
     }
     validMoves.push_back(make_tuple(x, y));
+    x += incx;
+    y += incy;
   }
 
   return validMoves;
@@ -183,6 +189,8 @@ vector<Location> Board::listPossibleRookMoves(Location loc)
 {
   vector<Location> validMoves = {};
   Color color = getColor(this->boardGet(loc));
+
+  cout << "color: " << color << endl;
 
   vector<Location> validMoves1 = this->cast(loc, color, 1, 0);
   vector<Location> validMoves2 = this->cast(loc, color, -1, 0);
@@ -230,16 +238,17 @@ vector<Location> Board::listPossibleKingMoves(Location loc)
 
 bool Board::isInCheck(Color color)
 {
-  if(color == NONE) throw "Color cannot be NONE";
+  if (color == NONE)
+    throw "Color cannot be NONE";
 
   bool isWhite = color;
 
   // get king location
-  Location kingLoc = this->pieces[isWhite*16];
+  Location kingLoc = this->pieces[isWhite * 16];
 
   // get all pieces of the opposite color
-  int startID = (!isWhite)*16;
-  int endID = (!isWhite)*16 + 16;
+  int startID = (!isWhite) * 16;
+  int endID = (!isWhite) * 16 + 16;
 
   for (int piece = startID; piece < endID; piece++)
   {
@@ -269,7 +278,7 @@ bool Board::isInCheck(Color color)
     default:
       continue;
     }
-    
+
     for (Location move : moves)
     {
       if (move == kingLoc)
@@ -299,24 +308,32 @@ vector<Location> pruneMoves(Location loc, vector<Location> moves)
 
 Board::Board()
 {
-  this->board = BoardVec(8, RowVec(8, Empty));
-  this->board[7] = {B_ROOK_1, B_KNIGHT_1, B_BISHOP_1, B_QUEEN, B_KING, B_BISHOP_1, B_KNIGHT_2, B_ROOK_2};
-  this->board[6] = {B_PAWN_1, B_PAWN_2, B_PAWN_3, B_PAWN_4, B_PAWN_5, B_PAWN_6, B_PAWN_7, B_PAWN_8};
+  this->pieces = vector<Location>(32);
+  for (int i = 0; i < 8; i++)
+  {
+    this->pieces[i] = make_tuple(i, 0);
+    this->pieces[i + 8] = make_tuple(i, 1);
+    this->pieces[i + 16] = make_tuple(i, 7);
+    this->pieces[i + 24] = make_tuple(i, 6);
+  }
 
-  this->board[1] = {W_PAWN_1, W_PAWN_2, W_PAWN_3, W_PAWN_4, W_PAWN_5, W_PAWN_6, W_PAWN_7, W_PAWN_8};
-  this->board[0] = {W_ROOK_1, W_KNIGHT_1, W_BISHOP_1, W_QUEEN, W_KING, W_BISHOP_1, W_KNIGHT_2, W_ROOK_2};
+  this->board = BoardVec(8, RowVec(8, Empty));
+  for(int id = MIN_W_ID; id <= MAX_B_ID; id++) {
+    Location loc = this->pieces[id];
+    this->boardSet(loc, toID(id));
+  }
 }
 
 string Board::toString()
 {
   string boardStr = "";
-  for (int i = 7; i >= 0; i--)
+  for (int y = 7; y >= 0; y--)
   {
-    for (int j = 0; j < 8; j++)
+    for (int x = 0; x < 8; x++)
     {
-      boardStr += Piece::toChar(this->board[i][j]);
+      boardStr += Piece::toChar(this->boardGet(make_tuple(x, y)));
     }
-    boardStr += " " + to_string(i + 1);
+    boardStr += " " + to_string(y + 1);
     boardStr += "\n";
   }
   boardStr += "\n";
@@ -331,7 +348,6 @@ ID Board::boardGet(Location location)
 
 void Board::boardSet(Location location, ID piece)
 {
-  this->pieces[piece] = location;
   this->board[get<1>(location)][get<0>(location)] = piece;
 }
 
@@ -341,26 +357,77 @@ bool Board::move(Move move)
   Location to = get<1>(move);
 
   ID piece = this->boardGet(from);
-  if (piece == Empty)
-  {
-    return false;
-  }
-
   this->boardSet(from, Empty);
   this->boardSet(to, piece);
 
+  this->pieces[piece] = to;
+
   return true;
+}
+
+vector<Location> Board::listPossibleMoves(Location loc){
+
+  ID piece = this->boardGet(loc);
+  if (piece == Empty)
+  {
+    return {};
+  }
+  Type type = getType(piece);
+  vector<Location> validMoves = {};
+  switch (type)
+  {
+  case PAWN:
+    validMoves = listPossiblePawnMoves(loc);
+    break;
+  case KNIGHT:
+    validMoves = listPossibleKnightMoves(loc);
+    break;
+  case BISHOP:
+    validMoves = listPossibleBishopMoves(loc);
+    break;
+  case ROOK:
+    validMoves = listPossibleRookMoves(loc);
+    break;
+  case QUEEN:
+    validMoves = listPossibleQueenMoves(loc);
+    break;
+  case KING:
+    validMoves = listPossibleKingMoves(loc);
+    break;
+  default:
+    break;
+  }
+
+  return validMoves;
 }
 
 bool Board::isValid(Move move)
 {
   Location from = get<0>(move);
-  // Location to = get<1>(move);
+  Location to = get<1>(move);
 
-  ID piece = this->boardGet(from);
-  if (piece == Empty)
+  vector<Location> validMoves = listPossibleMoves(from);
+
+  for (Location move : validMoves)
   {
-    return false;
+    if (move == to)
+    {
+      return true;
+    }
   }
-  return true;
+  cout << "Invalid. Valid moves are: " << endl;
+  for (Location move : validMoves)
+  {
+    cout << (int) get<0>(move) << ", " << (int) get<1>(move) << endl;
+  }
+  return false;
 };
+
+bool Board::moveIfAble(Move move){
+  if (isValid(move))
+  {
+    Board::move(move);
+    return true;
+  }
+  return false;
+}

@@ -45,10 +45,6 @@ private:
 
   vector<Location> findAllMoves(Color color);
 
-public:
-  Board();
-  string toString();
-
   ID boardGet(Location location);
 
   void boardSet(Location location, ID piece);
@@ -56,4 +52,13 @@ public:
   bool move(Move move);
 
   bool isValid(Move move);
+
+public:
+  Board();
+  Board(BoardVec board);
+  Board(vector<Location> pieces);
+  string toString();
+
+  vector<Location> listPossibleMoves(Location loc);
+  bool moveIfAble(Move move);
 };

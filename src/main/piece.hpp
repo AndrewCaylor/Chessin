@@ -1,11 +1,23 @@
 #pragma once
 
+#define MIN_W_ID W_ROOK_1
+#define MAX_W_ID W_PAWN_8
+#define MIN_B_ID B_ROOK_1
+#define MAX_B_ID B_PAWN_8
+#define toID(i) static_cast<ID>(i)
+
 namespace Piece
 {
   enum ID
   {
-    W_KING,
+    W_ROOK_1,
+    W_KNIGHT_1,
+    W_BISHOP_1,
     W_QUEEN,
+    W_KING,
+    W_BISHOP_2,
+    W_KNIGHT_2,
+    W_ROOK_2,
     W_PAWN_1,
     W_PAWN_2,
     W_PAWN_3,
@@ -14,15 +26,15 @@ namespace Piece
     W_PAWN_6,
     W_PAWN_7,
     W_PAWN_8,
-    W_KNIGHT_1,
-    W_KNIGHT_2,
-    W_BISHOP_1,
-    W_BISHOP_2,
-    W_ROOK_1,
-    W_ROOK_2,
 
-    B_KING,
+    B_ROOK_1,
+    B_KNIGHT_1,
+    B_BISHOP_1,
     B_QUEEN,
+    B_KING,
+    B_BISHOP_2,
+    B_KNIGHT_2,
+    B_ROOK_2,
     B_PAWN_1,
     B_PAWN_2,
     B_PAWN_3,
@@ -31,12 +43,6 @@ namespace Piece
     B_PAWN_6,
     B_PAWN_7,
     B_PAWN_8,
-    B_KNIGHT_1,
-    B_KNIGHT_2,
-    B_BISHOP_1,
-    B_BISHOP_2,
-    B_ROOK_1,
-    B_ROOK_2,
 
     ID_EMPTY = -1
   };

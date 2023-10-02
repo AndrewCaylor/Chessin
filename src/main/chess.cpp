@@ -6,20 +6,24 @@
 
 using namespace std;
 
-int main()
+#ifdef UNIT_TESTS
+#define MAIN not_main
+#else
+#define MAIN main
+#endif
+
+int MAIN()
 {
 
   Board board = Board();
 
-  cout << board.toString() << endl;
-
-  cout << 1 << endl;
-  cout << ~1 << endl;
 
   // let two players play the game, using command line input
   while (true)
   {
-    cout << "Enter move: ";
+    cout << board.toString() << endl;
+
+    cout << "Enter move: " ;
     string moveStr;
     cin >> moveStr;
 
@@ -38,9 +42,7 @@ int main()
     Location to = make_tuple(toX, toY);
     Move move = make_tuple(from, to);
 
-    board.move(move);
-
-    cout << board.toString() << endl;
+    bool result = board.moveIfAble(move);
   }
 
   return 0;
