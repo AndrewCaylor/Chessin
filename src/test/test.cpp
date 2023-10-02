@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <board.hpp>
+#include <boardnode.hpp>
 
 // TEST(Tests, test_get) {
 //   Board board = Board();
@@ -44,4 +45,12 @@ TEST(Tests, test_valid_rook_move) {
 
   EXPECT_FALSE(result);
 }
+
+TEST(Tests, test_best_move) {
+  BoardNode node = BoardNode(Board(), 0, 2, true);
+  node.calc();
+
+  node.bestMove(); 
+}
+
 

@@ -17,7 +17,6 @@ class BoardData
 private:
   BoardVec board = {};
   vector<Location> pieces;
-  void setPiece(Location location, ID piece);
 
 public:
   BoardData();
@@ -28,6 +27,7 @@ public:
   
   // getLocation may return -1, -1 if the piece is not on the board
   Location getLocation(ID id);
+  void setPiece(Location location, ID piece);
 
   void movePiece(Move move);
 

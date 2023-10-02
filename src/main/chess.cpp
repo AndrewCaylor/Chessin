@@ -21,7 +21,7 @@ int MAIN()
   // let two players play the game, using command line input
   while (true)
   {
-    cout << board.getBoardData().toString() << endl;
+    cout << board.board.toString() << endl;
 
     cout << "Enter move: " ;
     string moveStr;

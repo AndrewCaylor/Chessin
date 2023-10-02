@@ -2,8 +2,8 @@
 
 ID BoardData::getID(Location location)
 {
-  if(get<0>(location) >= 8 || get<1>(location) >= 8){
-    throw "Invalid location";
+  if(get<0>(location) >= 8 || get<1>(location) >= 8 || get<0>(location) < 0 || get<1>(location) < 0){
+    throw runtime_error("GetID: Invalid location");
   }
 
   return board[get<1>(location)][get<0>(location)];
@@ -12,7 +12,7 @@ ID BoardData::getID(Location location)
 Location BoardData::getLocation(ID id)
 {
   if(id < MIN_W_ID || id > MAX_B_ID) {
-    throw "Invalid ID";
+    throw runtime_error("GetLocation: Invalid ID");
   }
   return pieces[id];
 }
@@ -20,6 +20,10 @@ Location BoardData::getLocation(ID id)
 void BoardData::setPiece(Location location, ID piece)
 {
   board[get<1>(location)][get<0>(location)] = piece;
+  if(piece == ID_EMPTY) {
+    return;
+  }
+  pieces[piece] = location;
 }
 
 void BoardData::movePiece(Move move)
@@ -28,10 +32,10 @@ void BoardData::movePiece(Move move)
   Location to = get<1>(move);
 
   if(get<0>(from) >= 8 || get<1>(from) >= 8){
-    throw "MovePiece: Invalid location (from)";
+    throw runtime_error("MovePiece: Invalid location (from)");
   }
   if(get<0>(to) >= 8 || get<1>(to) >= 8){
-    throw "MovePiece: Invalid location (to)";
+    throw runtime_error("MovePiece: Invalid location (to)");
   }
 
   ID piece = getID(from);
@@ -48,8 +52,8 @@ void BoardData::movePiece(Move move)
 
 BoardData::BoardData(const BoardData &board)
 {
-  this->board = board.board;
-  pieces = board.pieces;
+  this->board = BoardVec(board.board);
+  pieces = std::vector<Location>(board.pieces);
 }
 
 string BoardData::toString()

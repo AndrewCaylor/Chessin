@@ -20,56 +20,65 @@ vector<Location> Board::listPossiblePawnMoves(Location loc)
 
   if (color == WHITE)
   {
-    if (board.getID(make_tuple(x, y + 1)) == Empty)
-    {
-      validMoves.push_back(make_tuple(x, y + 1));
+    Location oneup = make_tuple(x, y + 1);
+    Location twoup = make_tuple(x, y + 2);
+    Location leftside = make_tuple(x - 1, y + 1);
+    Location rightside = make_tuple(x + 1, y + 1);
 
-      if (y == 1 && board.getID(make_tuple(x, y + 2)) == Empty)
-      {
-        validMoves.push_back(make_tuple(x, y + 2));
-      }
+    bool canMoveOne = board.isValidLocation(oneup) && board.getID(oneup) == Empty;
+    bool canMoveTwo = canMoveOne && y == 1 && board.isValidLocation(twoup) && board.getID(twoup) == Empty;
+    bool canMoveLeft = board.isValidLocation(leftside) && board.getID(leftside) != Empty && getColor(board.getID(leftside)) != color;
+    bool canMoveRight = board.isValidLocation(rightside) && board.getID(rightside) != Empty && getColor(board.getID(rightside)) != color;
+
+    if (canMoveOne)
+    {
+      validMoves.push_back(oneup);
     }
-
-    // handle captures
-    ID piece = board.getID(make_tuple(x + 1, y + 1));
-    if (piece != Empty && getColor(piece) != color)
+    if (canMoveTwo)
     {
-      validMoves.push_back(make_tuple(x + 1, y + 1));
+      validMoves.push_back(twoup);
     }
-
-    piece = board.getID(make_tuple(x - 1, y + 1));
-    if (piece != Empty && getColor(piece) != color)
+    if (canMoveLeft)
     {
-      validMoves.push_back(make_tuple(x - 1, y + 1));
+      validMoves.push_back(leftside);
+    }
+    if (canMoveRight)
+    {
+      validMoves.push_back(rightside);
     }
   }
   else if (color == BLACK)
   {
-    if (board.getID(make_tuple(x, y - 1)) == Empty)
-    {
-      validMoves.push_back(make_tuple(x, y - 1));
+    Location onedown = make_tuple(x, y - 1);
+    Location twodown = make_tuple(x, y - 2);
+    Location leftside = make_tuple(x - 1, y - 1);
+    Location rightside = make_tuple(x + 1, y - 1);
 
-      if (y == 6 && board.getID(make_tuple(x, y - 2)) == Empty)
-      {
-        validMoves.push_back(make_tuple(x, y - 2));
-      }
+    bool canMoveOne = board.isValidLocation(onedown) && board.getID(onedown) == Empty;
+    bool canMoveTwo = canMoveOne && y == 6 && board.isValidLocation(twodown) && board.getID(twodown) == Empty;
+    bool canMoveLeft = board.isValidLocation(leftside) && board.getID(leftside) != Empty && getColor(board.getID(leftside)) != color;
+    bool canMoveRight = board.isValidLocation(rightside) && board.getID(rightside) != Empty && getColor(board.getID(rightside)) != color;
+
+    if (canMoveOne)
+    {
+      validMoves.push_back(onedown);
     }
-
-    // handle captures
-    ID piece = board.getID(make_tuple(x + 1, y - 1));
-    if (piece != Empty && getColor(piece) != color)
+    if (canMoveTwo)
     {
-      validMoves.push_back(make_tuple(x + 1, y - 1));
+      validMoves.push_back(twodown);
     }
-
-    piece = board.getID(make_tuple(x - 1, y - 1));
-    if (piece != Empty && getColor(piece) != color)
+    if (canMoveLeft)
     {
-      validMoves.push_back(make_tuple(x - 1, y - 1));
+      validMoves.push_back(leftside);
+    }
+    if (canMoveRight)
+    {
+      validMoves.push_back(rightside);
     }
   }
-  else{
-    throw "Color cannot be NONE";
+  else
+  {
+    throw runtime_error("Invalid color");
   }
 
   return validMoves;
@@ -113,9 +122,7 @@ vector<Location> Board::listPossibleKnightMoves(Location loc)
   for (size_t i = 0; i < validMoves.size(); i++)
   {
     Location move = validMoves[i];
-    int x = get<0>(move);
-    int y = get<1>(move);
-    if (x < 0 || x >= 8 || y < 0 || y >= 8)
+    if (!BoardData::isValidLocation(move))
     {
       validMoves.erase(validMoves.begin() + i);
       i--;
@@ -225,6 +232,18 @@ vector<Location> Board::listPossibleKingMoves(Location loc)
   validMoves.push_back(make_tuple(x - 1, y));
   validMoves.push_back(make_tuple(x, y + 1));
   validMoves.push_back(make_tuple(x, y - 1));
+
+  // reject moves that are off the board
+  for (size_t i = 0; i < validMoves.size(); i++)
+  {
+    Location move = validMoves[i];
+    if (!BoardData::isValidLocation(move))
+    {
+      validMoves.erase(validMoves.begin() + i);
+      i--;
+    }
+  }
+
   return validMoves;
 }
 
@@ -235,7 +254,7 @@ vector<Location> Board::listPossibleKingMoves(Location loc)
 bool Board::isInCheck(Color color)
 {
   if (color == NONE)
-    throw "Color cannot be NONE";
+    throw runtime_error("Invalid color");
 
   bool isWhite = color;
 
@@ -251,10 +270,21 @@ bool Board::isInCheck(Color color)
   }
 
   // get all pieces of the opposite color
-  int startID = (!isWhite) * 16;
-  int endID = (!isWhite) * 16 + 16;
+  int startID;
+  int endID;
 
-  for (int piece = startID; piece < endID; piece++)
+  if (isWhite)
+  {
+    startID = MIN_B_ID;
+    endID = MAX_B_ID;
+  }
+  else
+  {
+    startID = MIN_W_ID;
+    endID = MAX_W_ID;
+  }
+
+  for (int piece = startID; piece <= endID; piece++)
   {
     Location loc = board.getLocation(toID(piece));
     bool exists = BoardData::isValidLocation(loc);
@@ -277,15 +307,21 @@ bool Board::isInCheck(Color color)
   return false;
 }
 
-vector<Location> pruneMoves(Location loc, vector<Location> moves)
+vector<Location> Board::pruneMoves(Location loc, vector<Location> moves, Color color)
 {
   vector<Location> validMoves = {};
   for (size_t i = 0; i < moves.size(); i++)
   {
+    // test out new move
     Location move = moves[i];
-    int x = get<0>(move);
-    int y = get<1>(move);
-    if (x >= 0 && x < 8 && y >= 0 && y < 8)
+    ID coveredPiece = board.getID(move);
+
+    board.movePiece(make_tuple(loc, move));
+    bool inCheck = isInCheck(color);
+    board.movePiece(make_tuple(move, loc));
+    board.setPiece(move, coveredPiece);
+
+    if (!inCheck)
     {
       validMoves.push_back(move);
     }
@@ -295,10 +331,11 @@ vector<Location> pruneMoves(Location loc, vector<Location> moves)
 
 Board::Board()
 {
-
+  this->board = BoardData();
 }
 
-vector<Location> Board::listPossibleMoves(Location loc){
+vector<Location> Board::listPossibleMoves(Location loc)
+{
 
   ID piece = board.getID(loc);
   if (piece == Empty)
@@ -348,15 +385,11 @@ bool Board::isValid(Move move)
       return true;
     }
   }
-  // cout << "Invalid. Valid moves are: " << endl;
-  // for (Location move : validMoves)
-  // {
-  //   cout << (int) get<0>(move) << ", " << (int) get<1>(move) << endl;
-  // }
   return false;
 };
 
-bool Board::moveIfAble(Move move){
+bool Board::moveIfAble(Move move)
+{
   if (isValid(move))
   {
     board.movePiece(move);
@@ -365,11 +398,13 @@ bool Board::moveIfAble(Move move){
   return false;
 }
 
-Board::Board(const Board& board){
+Board::Board(const Board &board)
+{
   this->board = board.board;
 }
 
-float Board::getEval(){
+float Board::getEval()
+{
 
   // loop through all pieces and add up their values
   float eval = 0;
@@ -377,21 +412,50 @@ float Board::getEval(){
   {
 
     Location loc = board.getLocation(toID(i));
-    ID piece = board.getID(loc);
-    eval += getValue(getType(piece));
+    if (board.isValidLocation(loc))
+    {
+      eval += getValue(getType(toID(i)));
+    }
   }
 
   for (int i = MIN_B_ID; i <= MAX_B_ID; i++)
   {
-
     Location loc = board.getLocation(toID(i));
-    ID piece = board.getID(loc);
-    eval -= getValue(getType(piece));
+    if (board.isValidLocation(loc))
+    {
+      eval -= getValue(getType(toID(i)));
+    }
   }
 
   return eval;
 }
 
-BoardData Board::getBoardData(){
-  return board;
+vector<tuple<Location, Location>> Board::findAllMoves(Color color)
+{
+  vector<tuple<Location, Location>> moves = {};
+  int startID = color * 16;
+  int endID = color * 16 + 16;
+
+  for (int piece = startID; piece < endID; piece++)
+  {
+    Location from = board.getLocation(toID(piece));
+    bool exists = BoardData::isValidLocation(from);
+
+    if (!exists)
+    {
+      continue;
+    }
+
+    vector<Location> possibleMoves = listPossibleMoves(from);
+
+    // prune moves that are invalid
+    possibleMoves = pruneMoves(from, possibleMoves, color);
+
+    for (size_t i = 0; i < possibleMoves.size(); i++)
+    {
+      Location to = possibleMoves[i];
+      moves.push_back(make_tuple(from, to));
+    }
+  }
+  return moves;
 }
