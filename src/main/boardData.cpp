@@ -124,11 +124,12 @@ BoardData::BoardData(vector<string> boardstr)
   int numBlackKings = 0;
   int numBlackPawns = 0;
 
-  for (int y = 7; y >= 0; y--)
+  // technically constructing this upside down, but it doesn't matter
+  for (int y = 0; y < 8; y++)
   {
     for (int x = 0; x < 8; x++)
     {
-      const char c = boardstr[y][x];
+      const char c = boardstr[7-y][x];
       Type type = toType(c);
       Color color;
       // if lowercase, black

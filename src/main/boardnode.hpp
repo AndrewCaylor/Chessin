@@ -6,11 +6,13 @@ class BoardNode
 private:
   Board *board;
   vector<BoardNode *> possible;
+  vector<float> evals;
   BoardNode *prev;
   float eval;
   int depth;
   int maxDepth;
   bool whitesTurn;
+  
 
   Move best;
 public:

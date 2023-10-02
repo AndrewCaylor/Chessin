@@ -47,22 +47,36 @@ TEST(Tests, test_valid_rook_move) {
 }
 
 TEST(Tests, test_best_move) {
-  BoardNode node = BoardNode(Board(), 0, 2, true);
+  BoardData b = BoardData({
+    "rnb.kbnr",
+    "pppppppp",
+    "........",
+    "........",
+    "........",
+    "q.......",
+    "P.PPPPPP",
+    "RNBQKBNR"
+  });
+  Board board = Board(b);
+  BoardNode node = BoardNode(board, 0, 3, true);
   node.calc();
 
-  node.bestMove(); 
+  Move move = node.bestMove();
+  board.moveIfAble(move);
+  cout << board.board.toString() << endl;
+  EXPECT_EQ(move, make_tuple(make_tuple(1, 0), make_tuple(0, 2)));
 }
 
 TEST(Tests, test_string_conttructor){
   BoardData b = BoardData({
-    "RNBQKBNR",
-    "PPPPPPPP",
-    "        ",
-    "        ",
-    "        ",
-    "        ",
+    "rnbqkbnr",
     "pppppppp",
-    "rnbqkbnr"
+    "........",
+    "........",
+    "........",
+    "........",
+    "PPPPPPPP",
+    "RNBQKBNR"
   });
 
   EXPECT_EQ(b.toString(), 

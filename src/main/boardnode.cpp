@@ -32,12 +32,13 @@ void BoardNode::calc(){
   }
 
   // find all possible moves for this color
-  vector<Move> moves = board->findAllMoves(this->whitesTurn ? Piece::WHITE : Piece::BLACK);
+  vector<Move> moves = board->findAllMoves(whitesTurn ? Piece::WHITE : Piece::BLACK);
   for (size_t i = 0; i < moves.size(); i++)
   {
-    BoardNode *newNode = new BoardNode(*board, moves[i], this->depth + 1, this->maxDepth, !this->whitesTurn);
+    BoardNode *newNode = new BoardNode(*board, moves[i], depth + 1, maxDepth, !whitesTurn);
     newNode->calc();
-    this->possible.push_back(newNode);
+    possible.push_back(newNode);
+    evals.push_back(newNode->eval);
   }
 
   // find best move for this color, and set it to this->best
@@ -61,7 +62,8 @@ void BoardNode::calc(){
       }
     }
   }
-  
+
+  this->eval = bestEval;
 }
 
 Move BoardNode::bestMove(){

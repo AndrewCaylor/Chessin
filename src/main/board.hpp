@@ -45,7 +45,7 @@ public:
   BoardData board;
 
   Board();
-  Board(BoardData board);
+  Board(const BoardData &board);
   Board(const Board& board);
 
   vector<Location> listPossibleMoves(Location loc);

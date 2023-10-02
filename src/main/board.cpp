@@ -403,6 +403,11 @@ Board::Board(const Board &board)
   this->board = board.board;
 }
 
+Board::Board(const BoardData &board)
+{
+  this->board = board;
+}
+
 float Board::getEval()
 {
 
