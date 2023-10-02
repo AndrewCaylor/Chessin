@@ -71,4 +71,6 @@ namespace Piece
   Color getColor(ID piece);
 
   Type getType(ID piece);
+
+  float getValue(Type type);
 }

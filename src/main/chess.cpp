@@ -21,13 +21,13 @@ int MAIN()
   // let two players play the game, using command line input
   while (true)
   {
-    cout << board.toString() << endl;
+    cout << board.getBoardData().toString() << endl;
 
     cout << "Enter move: " ;
     string moveStr;
     cin >> moveStr;
 
-    if (moveStr == "quit")
+    if (moveStr == "q")
     {
       break;
     }
@@ -42,7 +42,7 @@ int MAIN()
     Location to = make_tuple(toX, toY);
     Move move = make_tuple(from, to);
 
-    bool result = board.moveIfAble(move);
+    board.moveIfAble(move);
   }
 
   return 0;

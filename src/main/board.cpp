@@ -13,31 +13,31 @@ vector<Location> Board::listPossiblePawnMoves(Location loc)
   vector<Location> validMoves = {};
   int x = get<0>(loc);
   int y = get<1>(loc);
-  Color color = getColor(this->boardGet(loc));
+  Color color = getColor(board.getID(loc));
 
   // TODO: handle promotion
   // TODO: handle en passant
 
   if (color == WHITE)
   {
-    if (this->boardGet(make_tuple(x, y + 1)) == Empty)
+    if (board.getID(make_tuple(x, y + 1)) == Empty)
     {
       validMoves.push_back(make_tuple(x, y + 1));
 
-      if (y == 1 && this->boardGet(make_tuple(x, y + 2)) == Empty)
+      if (y == 1 && board.getID(make_tuple(x, y + 2)) == Empty)
       {
         validMoves.push_back(make_tuple(x, y + 2));
       }
     }
 
     // handle captures
-    ID piece = this->boardGet(make_tuple(x + 1, y + 1));
+    ID piece = board.getID(make_tuple(x + 1, y + 1));
     if (piece != Empty && getColor(piece) != color)
     {
       validMoves.push_back(make_tuple(x + 1, y + 1));
     }
 
-    piece = this->boardGet(make_tuple(x - 1, y + 1));
+    piece = board.getID(make_tuple(x - 1, y + 1));
     if (piece != Empty && getColor(piece) != color)
     {
       validMoves.push_back(make_tuple(x - 1, y + 1));
@@ -45,24 +45,24 @@ vector<Location> Board::listPossiblePawnMoves(Location loc)
   }
   else if (color == BLACK)
   {
-    if (this->boardGet(make_tuple(x, y - 1)) == Empty)
+    if (board.getID(make_tuple(x, y - 1)) == Empty)
     {
       validMoves.push_back(make_tuple(x, y - 1));
 
-      if (y == 6 && this->boardGet(make_tuple(x, y - 2)) == Empty)
+      if (y == 6 && board.getID(make_tuple(x, y - 2)) == Empty)
       {
         validMoves.push_back(make_tuple(x, y - 2));
       }
     }
 
     // handle captures
-    ID piece = this->boardGet(make_tuple(x + 1, y - 1));
+    ID piece = board.getID(make_tuple(x + 1, y - 1));
     if (piece != Empty && getColor(piece) != color)
     {
       validMoves.push_back(make_tuple(x + 1, y - 1));
     }
 
-    piece = this->boardGet(make_tuple(x - 1, y - 1));
+    piece = board.getID(make_tuple(x - 1, y - 1));
     if (piece != Empty && getColor(piece) != color)
     {
       validMoves.push_back(make_tuple(x - 1, y - 1));
@@ -80,7 +80,7 @@ vector<Location> Board::listPossiblePawnAttacks(Location loc)
   vector<Location> validMoves = {};
   int x = get<0>(loc);
   int y = get<1>(loc);
-  Color color = getColor(this->boardGet(loc));
+  Color color = getColor(board.getID(loc));
 
   if (color == WHITE)
   {
@@ -123,11 +123,11 @@ vector<Location> Board::listPossibleKnightMoves(Location loc)
   }
 
   // reject moves that are blocked by a piece of the same color
-  Color color = getColor(this->boardGet(loc));
+  Color color = getColor(board.getID(loc));
   for (size_t i = 0; i < validMoves.size(); i++)
   {
     Location move = validMoves[i];
-    ID piece = this->boardGet(move);
+    ID piece = board.getID(move);
     if (getColor(piece) == color)
     {
       validMoves.erase(validMoves.begin() + i);
@@ -148,7 +148,7 @@ vector<Location> Board::cast(Location loc, Color color, int incx, int incy)
   y += incy;
   while (x < 8 && y < 8 && x >= 0 && y >= 0)
   {
-    ID piece = this->boardGet(make_tuple(x, y));
+    ID piece = board.getID(make_tuple(x, y));
     if (piece != Empty)
     {
       if (color != getColor(piece))
@@ -168,7 +168,7 @@ vector<Location> Board::cast(Location loc, Color color, int incx, int incy)
 vector<Location> Board::listPossibleBishopMoves(Location loc)
 {
   vector<Location> validMoves = {};
-  Color color = getColor(this->boardGet(loc));
+  Color color = getColor(board.getID(loc));
 
   vector<Location> validMoves1 = this->cast(loc, color, 1, 1);
   vector<Location> validMoves2 = this->cast(loc, color, 1, -1);
@@ -186,7 +186,7 @@ vector<Location> Board::listPossibleBishopMoves(Location loc)
 vector<Location> Board::listPossibleRookMoves(Location loc)
 {
   vector<Location> validMoves = {};
-  Color color = getColor(this->boardGet(loc));
+  Color color = getColor(board.getID(loc));
 
   vector<Location> validMoves1 = this->cast(loc, color, 1, 0);
   vector<Location> validMoves2 = this->cast(loc, color, -1, 0);
@@ -240,7 +240,15 @@ bool Board::isInCheck(Color color)
   bool isWhite = color;
 
   // get king location
-  Location kingLoc = this->pieces[isWhite * 16];
+  Location kingLoc;
+  if (isWhite)
+  {
+    kingLoc = board.getLocation(W_KING);
+  }
+  else
+  {
+    kingLoc = board.getLocation(B_KING);
+  }
 
   // get all pieces of the opposite color
   int startID = (!isWhite) * 16;
@@ -248,32 +256,15 @@ bool Board::isInCheck(Color color)
 
   for (int piece = startID; piece < endID; piece++)
   {
-    Location loc = this->pieces[piece];
+    Location loc = board.getLocation(toID(piece));
+    bool exists = BoardData::isValidLocation(loc);
 
-    vector<Location> moves = {};
-    switch (getType(toID(piece)))
+    if (!exists)
     {
-    case PAWN:
-      moves = this->listPossiblePawnAttacks(loc);
-      break;
-    case KNIGHT:
-      moves = this->listPossibleKnightMoves(loc);
-      break;
-    case BISHOP:
-      moves = this->listPossibleBishopMoves(loc);
-      break;
-    case ROOK:
-      moves = this->listPossibleRookMoves(loc);
-      break;
-    case QUEEN:
-      moves = this->listPossibleQueenMoves(loc);
-      break;
-    case KING:
-      moves = this->listPossibleKingMoves(loc);
-      break;
-    default:
       continue;
     }
+
+    vector<Location> moves = listPossibleMoves(loc);
 
     for (Location move : moves)
     {
@@ -304,66 +295,12 @@ vector<Location> pruneMoves(Location loc, vector<Location> moves)
 
 Board::Board()
 {
-  this->pieces = vector<Location>(32);
-  for (int i = 0; i < 8; i++)
-  {
-    this->pieces[i] = make_tuple(i, 0);
-    this->pieces[i + 8] = make_tuple(i, 1);
-    this->pieces[i + 16] = make_tuple(i, 7);
-    this->pieces[i + 24] = make_tuple(i, 6);
-  }
 
-  this->board = BoardVec(8, RowVec(8, Empty));
-  for(int id = MIN_W_ID; id <= MAX_B_ID; id++) {
-    Location loc = this->pieces[id];
-    this->boardSet(loc, toID(id));
-  }
-}
-
-string Board::toString()
-{
-  string boardStr = "";
-  for (int y = 7; y >= 0; y--)
-  {
-    for (int x = 0; x < 8; x++)
-    {
-      boardStr += Piece::toChar(this->boardGet(make_tuple(x, y)));
-    }
-    boardStr += " " + to_string(y + 1);
-    boardStr += "\n";
-  }
-  boardStr += "\n";
-  boardStr += "abcdefgh\n";
-  return boardStr;
-}
-
-ID Board::boardGet(Location location)
-{
-  return this->board[get<1>(location)][get<0>(location)];
-}
-
-void Board::boardSet(Location location, ID piece)
-{
-  this->board[get<1>(location)][get<0>(location)] = piece;
-}
-
-bool Board::move(Move move)
-{
-  Location from = get<0>(move);
-  Location to = get<1>(move);
-
-  ID piece = this->boardGet(from);
-  this->boardSet(from, Empty);
-  this->boardSet(to, piece);
-
-  this->pieces[piece] = to;
-
-  return true;
 }
 
 vector<Location> Board::listPossibleMoves(Location loc){
 
-  ID piece = this->boardGet(loc);
+  ID piece = board.getID(loc);
   if (piece == Empty)
   {
     return {};
@@ -422,8 +359,39 @@ bool Board::isValid(Move move)
 bool Board::moveIfAble(Move move){
   if (isValid(move))
   {
-    Board::move(move);
+    board.movePiece(move);
     return true;
   }
   return false;
+}
+
+Board::Board(const Board& board){
+  this->board = board.board;
+}
+
+float Board::getEval(){
+
+  // loop through all pieces and add up their values
+  float eval = 0;
+  for (int i = MIN_W_ID; i <= MAX_W_ID; i++)
+  {
+
+    Location loc = board.getLocation(toID(i));
+    ID piece = board.getID(loc);
+    eval += getValue(getType(piece));
+  }
+
+  for (int i = MIN_B_ID; i <= MAX_B_ID; i++)
+  {
+
+    Location loc = board.getLocation(toID(i));
+    ID piece = board.getID(loc);
+    eval -= getValue(getType(piece));
+  }
+
+  return eval;
+}
+
+BoardData Board::getBoardData(){
+  return board;
 }

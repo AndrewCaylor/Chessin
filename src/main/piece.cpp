@@ -99,3 +99,21 @@ Piece::Type Piece::getType(ID piece)
     return TYPE_EMPTY;
   }
 }
+
+float Piece::getValue(Type piece){
+  switch (piece)
+  {
+  case QUEEN:
+    return 9;
+  case PAWN:
+    return 1;
+  case KNIGHT:
+    return 3;
+  case BISHOP:
+    return 3;
+  case ROOK:
+    return 5;
+  default:
+    return 0;
+  }
+}

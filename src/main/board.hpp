@@ -3,23 +3,14 @@
 #include <vector>
 #include <iostream>
 #include <piece.hpp>
+#include <boardData.hpp>
 
 #pragma once
-
-using namespace std;
-using namespace Piece;
-typedef vector<ID> RowVec;
-typedef vector<RowVec> BoardVec;
-
-typedef tuple<char, char> Location;
-typedef tuple<Location, Location> Move;
 
 class Board
 {
 private:
-  BoardVec board = {};
-
-  vector<Location> pieces;
+  BoardData board;
 
   vector<Location> listPossiblePawnMoves(Location loc);
 
@@ -45,20 +36,18 @@ private:
 
   vector<Location> findAllMoves(Color color);
 
-  ID boardGet(Location location);
-
-  void boardSet(Location location, ID piece);
-
   bool move(Move move);
 
   bool isValid(Move move);
 
 public:
   Board();
-  Board(BoardVec board);
-  Board(vector<Location> pieces);
-  string toString();
+  Board(const Board& board);
 
   vector<Location> listPossibleMoves(Location loc);
   bool moveIfAble(Move move);
+
+  BoardData getBoardData();
+
+  float getEval();
 };
