@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0) # setting this is required
-project(example_project)            # this sets the project name
+project(chessin)                    # this sets the project name
 
 ###############################################################################
 ## file globbing ##############################################################
@@ -20,30 +20,17 @@ file(GLOB_RECURSE data resources/*)
 
 # The data is just added to the executable, because in some IDEs (QtCreator) 
 # files are invisible when they are not explicitly part of the project.
-add_executable(example ${sources} ${data})
+add_executable(main ${sources} ${data})
 
 # Just for example add some compiler flags.
-target_compile_options(example PUBLIC -std=c++1y -Wall -Wfloat-conversion)
+target_compile_options(main PUBLIC -std=c++1y -Wall -Wfloat-conversion)
 
 # This allows to include files relative to the root of the src directory with a <> pair
-target_include_directories(example PUBLIC src/main)
+target_include_directories(main PUBLIC src/main)
 
 # This copies all resource files in the build directory.
 # We need this, because we want to work with paths relative to the executable.
 file(COPY ${data} DESTINATION resources)
-
-###############################################################################
-## dependencies ###############################################################
-###############################################################################
-
-# This defines the variables Boost_LIBRARIES that containts all library names
-# that we need to link into the program.
-find_package(Boost 1.36.0 COMPONENTS filesystem system REQUIRED)
-
-target_link_libraries(example PUBLIC
-  ${Boost_LIBRARIES}
-  # here you can add any library dependencies
-)
 
 ###############################################################################
 ## testing ####################################################################
@@ -65,11 +52,11 @@ if(GTEST_FOUND)
 
   # This allows us to use the executable as a link library, and inherit all 
   # linker options and library dependencies from it, by simply adding it as dependency.
-  set_target_properties(example PROPERTIES ENABLE_EXPORTS on)
+  set_target_properties(main PROPERTIES ENABLE_EXPORTS on)
 
   target_link_libraries(unit_tests PUBLIC
     ${GTEST_BOTH_LIBRARIES}
-    example
+    main
   )
 
   target_include_directories(unit_tests PUBLIC
@@ -84,7 +71,7 @@ endif()
 
 # All install commands get the same destination. this allows us to use paths
 # relative to the executable.
-install(TARGETS example DESTINATION example_destination)
+install(TARGETS main DESTINATION example_destination)
 
 # This is basically a repeat of the file copy instruction that copies the
 # resources in the build directory, but here we tell cmake that we want it
