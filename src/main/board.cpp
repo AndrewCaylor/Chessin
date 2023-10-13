@@ -256,11 +256,9 @@ bool Board::isInCheck(Color color)
   if (color == NONE)
     throw runtime_error("Invalid color");
 
-  bool isWhite = color;
-
   // get king location
   Location kingLoc;
-  if (isWhite)
+  if (color == WHITE)
   {
     kingLoc = board.getLocation(W_KING);
   }
@@ -273,7 +271,7 @@ bool Board::isInCheck(Color color)
   int startID;
   int endID;
 
-  if (isWhite)
+  if (color == WHITE)
   {
     startID = MIN_B_ID;
     endID = MAX_B_ID;
@@ -410,6 +408,16 @@ Board::Board(const BoardData &board)
 
 float Board::getEval()
 {
+  bool isCheckmate = isCheckmated(WHITE);
+  if (isCheckmate)
+  {
+    return -1000000;
+  }
+  isCheckmate = isCheckmated(BLACK);
+  if (isCheckmate)
+  {
+    return 1000000;
+  }
 
   // loop through all pieces and add up their values
   float eval = 0;
@@ -433,6 +441,23 @@ float Board::getEval()
   }
 
   return eval;
+}
+
+bool Board::isCheckmated(Color c){
+  bool inCheck = isInCheck(c);
+  if (!inCheck){
+    return false;
+  }
+
+  vector<tuple<Location, Location>> moves = findAllMoves(c);
+  for (size_t i = 0; i < moves.size(); i++)
+  {
+    Board newBoard = Board(board);
+    newBoard.moveIfAble(moves[i]);
+    if (!newBoard.isInCheck(c)){
+      return false;
+    }
+  }
 }
 
 vector<tuple<Location, Location>> Board::findAllMoves(Color color)

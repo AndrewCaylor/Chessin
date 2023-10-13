@@ -35,8 +35,6 @@ private:
 
   bool canCapture(Location loc, Color color);
 
-  bool isInCheck(Color color);
-
   bool move(Move move);
 
   bool isValid(Move move);
@@ -50,6 +48,9 @@ public:
 
   vector<Location> listPossibleMoves(Location loc);
   vector<Move> findAllMoves(Color color);
+
+  bool isInCheck(Color color);
+  bool isCheckmated(Color color);
 
   // use for CLI, not for AI
   bool moveIfAble(Move move);

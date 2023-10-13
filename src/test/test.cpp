@@ -18,7 +18,8 @@
 //   }
 // }
 
-TEST(Tests, test_valid_pawn_move) {
+TEST(Tests, test_valid_pawn_move)
+{
   Board board = Board();
   vector<Location> locs = board.listPossibleMoves(make_tuple(1, 1));
 
@@ -31,7 +32,8 @@ TEST(Tests, test_valid_pawn_move) {
   EXPECT_TRUE(result);
 }
 
-TEST(Tests, test_valid_rook_move) {
+TEST(Tests, test_valid_rook_move)
+{
   Board board = Board();
   bool result = board.moveIfAble(make_tuple(make_tuple(1, 1), make_tuple(1, 2)));
   EXPECT_TRUE(result);
@@ -46,19 +48,18 @@ TEST(Tests, test_valid_rook_move) {
   EXPECT_FALSE(result);
 }
 
-TEST(Tests, test_best_move) {
-  BoardData b = BoardData({
-    "rnb.kbnr",
-    "pppppppp",
-    "........",
-    "........",
-    "........",
-    "q.......",
-    "P.PPPPPP",
-    "RNBQKBNR"
-  });
+TEST(Tests, test_best_move)
+{
+  BoardData b = BoardData({"rnb.kbnr",
+                           "pppppppp",
+                           "........",
+                           "........",
+                           "........",
+                           "q.......",
+                           "P.PPPPPP",
+                           "RNBQKBNR"});
   Board board = Board(b);
-  BoardNode node = BoardNode(board, 0, 3, true);
+  BoardNode node = BoardNode(board, 0, 2, true);
   node.calc();
 
   Move move = node.bestMove();
@@ -67,29 +68,60 @@ TEST(Tests, test_best_move) {
   EXPECT_EQ(move, make_tuple(make_tuple(1, 0), make_tuple(0, 2)));
 }
 
-TEST(Tests, test_string_conttructor){
-  BoardData b = BoardData({
-    "rnbqkbnr",
-    "pppppppp",
-    "........",
-    "........",
-    "........",
-    "........",
-    "PPPPPPPP",
-    "RNBQKBNR"
-  });
+TEST(Tests, in_check)
+{
+  {
+    BoardData bd = BoardData({"rnb.kbnr",
+                              "ppp.pppp",
+                              "........",
+                              "........",
+                              "....q...",
+                              "........",
+                              "PPPP.PPP",
+                              "RNBQKBNR"});
 
-  EXPECT_EQ(b.toString(), 
-    "rnbqkbnr 8\n"
-    "pppppppp 7\n"
-    "........ 6\n"
-    "........ 5\n"
-    "........ 4\n"
-    "........ 3\n"
-    "PPPPPPPP 2\n"
-    "RNBQKBNR 1\n"
-    "\n"
-    "abcdefgh\n"
-  );
+    Board b = Board(bd);
+
+    EXPECT_TRUE(b.isInCheck(Piece::WHITE));
+    EXPECT_FALSE(b.isInCheck(Piece::BLACK));
+  }
+  {
+    BoardData bd = BoardData({"rnb.kbnr",
+                              "ppp.pPpp",
+                              "........",
+                              "........",
+                              "........",
+                              "........",
+                              "PPPP.PPP",
+                              "RNBQKBNR"});
+
+    Board b = Board(bd);
+
+    EXPECT_TRUE(b.isInCheck(Piece::BLACK));
+    EXPECT_FALSE(b.isInCheck(Piece::WHITE));
+  }
 }
 
+TEST(Tests, test_string_conttructor)
+{
+  BoardData b = BoardData({"rnbqkbnr",
+                           "pppppppp",
+                           "........",
+                           "........",
+                           "........",
+                           "........",
+                           "PPPPPPPP",
+                           "RNBQKBNR"});
+
+  EXPECT_EQ(b.toString(),
+            "rnbqkbnr 8\n"
+            "pppppppp 7\n"
+            "........ 6\n"
+            "........ 5\n"
+            "........ 4\n"
+            "........ 3\n"
+            "PPPPPPPP 2\n"
+            "RNBQKBNR 1\n"
+            "\n"
+            "abcdefgh\n");
+}
