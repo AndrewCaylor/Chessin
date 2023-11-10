@@ -45,10 +45,22 @@ string getView(BoardData b, PieceColor color, bool doNewline = false)
         out += ".";
       }
     }
-    if (doNewline) out += "\n";
+    if (doNewline)
+      out += "\n";
   }
-  if (doNewline) out += "\n";
+  if (doNewline)
+    out += "\n";
   return out;
+}
+
+int numMoves(Piece *piece)
+{
+  int moves = 0;
+  for (Vector v : piece->moves)
+  {
+    moves += v.len;
+  }
+  return moves;
 }
 
 TEST(Tests, test_in_check)
@@ -80,15 +92,15 @@ TEST(Tests, test_vision_king)
 
   BoardManager bm = BoardManager(b);
 
-  string expectedVisionBlack = 
-    "...1.1.."
-    "...111.."
-    "........"
-    "........"
-    "........"
-    "........"
-    "........"
-    "........";
+  string expectedVisionBlack =
+      "...1.1.."
+      "...111.."
+      "........"
+      "........"
+      "........"
+      "........"
+      "........"
+      "........";
 
   string view = getView(b, PieceColor::BLACK);
 
@@ -108,15 +120,15 @@ TEST(Tests, test_vision_queen)
 
   BoardManager bm = BoardManager(b);
 
-  string expectedVisionBlack = 
-    "........"
-    ".1.....1"
-    "..1.1.1."
-    "...111.."
-    "1111.111"
-    "...111.."
-    "111.1.1."
-    ".2..1..1";
+  string expectedVisionBlack =
+      "........"
+      ".1.....1"
+      "..1.1.1."
+      "...111.."
+      "1111.111"
+      "...111.."
+      "111.1.1."
+      ".2..1..1";
 
   string view = getView(b, PieceColor::BLACK);
 
@@ -136,15 +148,15 @@ TEST(Tests, visionKnight)
 
   BoardManager bm = BoardManager(b);
 
-  string expectedVisionBlack = 
-    "........"
-    "........"
-    "........"
-    "......1."
-    ".....1.."
-    "........"
-    "11...1.."
-    ".1....1.";
+  string expectedVisionBlack =
+      "........"
+      "........"
+      "........"
+      "......1."
+      ".....1.."
+      "........"
+      "11...1.."
+      ".1....1.";
 
   string view = getView(b, PieceColor::BLACK);
 
@@ -164,15 +176,15 @@ TEST(Tests, visionPawn)
 
   BoardManager bm = BoardManager(b);
 
-  string expectedVisionWhite = 
-    "........"
-    "........"
-    "........"
-    "........"
-    "...111.1"
-    "......11"
-    "11......"
-    ".1......";
+  string expectedVisionWhite =
+      "........"
+      "........"
+      "........"
+      "........"
+      "...111.1"
+      "......11"
+      "11......"
+      ".1......";
 
   string view = getView(b, PieceColor::WHITE);
 
@@ -201,36 +213,36 @@ TEST(Tests, movePiece)
   bm.movePiece(bRook, XY(5, 3));
 
   EXPECT_EQ(b.toString(),
-          ".....k.. 8\n"
-          "........ 7\n"
-          "........ 6\n"
-          "........ 5\n"
-          "...R.r.. 4\n"
-          "........ 3\n"
-          "........ 2\n"
-          "....K... 1\n"
-          "\n"
-          "abcdefgh\n");
+            ".....k.. 8\n"
+            "........ 7\n"
+            "........ 6\n"
+            "........ 5\n"
+            "...R.r.. 4\n"
+            "........ 3\n"
+            "........ 2\n"
+            "....K... 1\n"
+            "\n"
+            "abcdefgh\n");
 
-  string expectedVisionBlack = 
-    "....111."
-    "....121."
-    ".....1.."
-    ".....1.."
-    "...11.11"
-    ".....1.."
-    ".....1.."
-    ".....1..";
+  string expectedVisionBlack =
+      "....111."
+      "....121."
+      ".....1.."
+      ".....1.."
+      "...11.11"
+      ".....1.."
+      ".....1.."
+      ".....1..";
 
-  string expectedVisionWhite = 
-    "...1...."
-    "...1...."
-    "...1...."
-    "...1...."
-    "111.11.."
-    "...1...."
-    "...211.."
-    "...2.1..";
+  string expectedVisionWhite =
+      "...1...."
+      "...1...."
+      "...1...."
+      "...1...."
+      "111.11.."
+      "...1...."
+      "...211.."
+      "...2.1..";
 
   string viewBlack = getView(b, PieceColor::BLACK);
   EXPECT_EQ(viewBlack, expectedVisionBlack);
@@ -242,4 +254,60 @@ TEST(Tests, movePiece)
   // cout << getView(b, PieceColor::WHITE, true);
   // cout << "BLACK" << endl;
   // cout << getView(b, PieceColor::BLACK, true);
+}
+
+TEST(Tests, attacksPawn)
+{
+  BoardData b = BoardData({"...k....",
+                           "........",
+                           "........",
+                           "...p....",
+                           ".....Pp.",
+                           "....P...",
+                           ".......P",
+                           "K......."});
+
+  BoardManager bm = BoardManager(b);
+
+  Piece *p1W = b.getPiece(XY(4, 2));
+  EXPECT_EQ(numMoves(p1W), 1);
+
+  bm.movePiece(p1W, XY(4, 3));
+  EXPECT_EQ(numMoves(p1W), 2);
+
+  Piece *p2W = b.getPiece(XY(7, 1));
+  Piece *p1B = b.getPiece(XY(6, 3));
+  EXPECT_EQ(numMoves(p2W), 2);
+
+  bm.movePiece(p1B, XY(6, 2));
+  EXPECT_EQ(numMoves(p2W), 3);
+
+  // b-but en passant you didnt test for en passant
+  // shut
+}
+
+TEST(Tests, attacksBishop)
+{
+  BoardData b = BoardData({"...k....",
+                           "........",
+                           "........",
+                           "........",
+                           "...p....",
+                           "R.......",
+                           ".B......",
+                           "K.R....B"});
+
+  BoardManager bm = BoardManager(b);
+  Piece *bishop1 = b.getPiece(XY(1, 1));
+  Piece *bishop2 = b.getPiece(XY(7, 0));
+  Piece *pawn = b.getPiece(XY(3, 3));
+
+  EXPECT_EQ(numMoves(bishop1), 2);
+
+  bm.movePiece(bishop2, XY(2, 2));
+  EXPECT_EQ(numMoves(bishop1), 0);
+
+  bm.movePiece(bishop2, XY(1, 3));
+  bm.movePiece(pawn, XY(7, 7));
+  EXPECT_EQ(numMoves(bishop1), 6);
 }
