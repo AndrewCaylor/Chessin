@@ -238,6 +238,8 @@ void BoardData::removeVision(Piece *piece)
   for (size_t i = 0; i < los.size(); i++)
   {
     removeVision(piece, i);
+    piece->views[i].len = 0;
+    piece->moves[i].len = 0;
   }
 }
 

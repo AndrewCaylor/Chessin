@@ -75,10 +75,15 @@ namespace util
   Move newMove(Location from, Location to);
 }
 
+/**
+ * A square on the board.
+ * Holds a piece. If the square is empty, piece is nullptr.
+ * Holds a map of pieces that can see this square. Maps them to the index of the view they see it from.
+ * Holds a stack of pieces that have been on this square. Used for backtracking.
+ */
 class Square
 {
 public:
-  bool occupied;
   Piece *piece;
   std::map<Piece *, ViewInd> viewsMapWhite;
   std::map<Piece *, ViewInd> viewsMapBlack;

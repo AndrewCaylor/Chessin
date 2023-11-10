@@ -173,7 +173,6 @@ Piece::Piece(char c, Location location)
 
 Square::Square()
 {
-  this->occupied = false;
   this->piece = nullptr;
   this->viewsMapBlack = {};
   this->viewsMapWhite = {};

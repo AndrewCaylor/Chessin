@@ -263,8 +263,6 @@ void BoardManager::movePiece(Piece *piece, Location loc)
     extendView(viewer, viewInd, piece->location);
   }
 
-  // also check around the old location for pieces that were
-
   // move the piece
   board.setPiece(loc, piece);
   createVision(piece);

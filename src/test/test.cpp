@@ -63,6 +63,16 @@ int numMoves(Piece *piece)
   return moves;
 }
 
+int amtVision(Piece *piece)
+{
+  int moves = 0;
+  for (Vector v : piece->views)
+  {
+    moves += v.len;
+  }
+  return moves;
+}
+
 TEST(Tests, test_in_check)
 {
   BoardData b = BoardData({"....k...",
@@ -310,4 +320,63 @@ TEST(Tests, attacksBishop)
   bm.movePiece(bishop2, XY(1, 3));
   bm.movePiece(pawn, XY(7, 7));
   EXPECT_EQ(numMoves(bishop1), 6);
+}
+
+TEST(Tests, rookCapture)
+{
+  BoardData b = BoardData({".....k..",
+                           "........",
+                           "R....r..",
+                           "........",
+                           "........",
+                           "........",
+                           "........",
+                           "....K..."});
+
+  BoardManager bm = BoardManager(b);
+  Piece *bRook = b.getPiece(XY(5, 5));
+  Piece *wRook = b.getPiece(XY(0, 5));
+
+  bm.movePiece(bRook, XY(0, 5));
+
+  EXPECT_EQ(b.toString(),
+            ".....k.. 8\n"
+            "........ 7\n"
+            "r....... 6\n"
+            "........ 5\n"
+            "........ 4\n"
+            "........ 3\n"
+            "........ 2\n"
+            "....K... 1\n"
+            "\n"
+            "abcdefgh\n");
+
+  string expectedVisionWhite =
+    "........"
+    "........"
+    "........"
+    "........"
+    "........"
+    "........"
+    "...111.."
+    "...1.1..";
+
+  string expectedVisionBlack =
+    "1...1.1."
+    "1...111."
+    ".1111111"
+    "1......."
+    "1......."
+    "1......."
+    "1......."
+    "1.......";
+
+  string viewBlack = getView(b, PieceColor::BLACK);
+  EXPECT_EQ(viewBlack, expectedVisionBlack);
+
+  string viewWhite = getView(b, PieceColor::WHITE);
+  EXPECT_EQ(viewWhite, expectedVisionWhite);
+  
+  EXPECT_EQ(amtVision(wRook), 0);
+  EXPECT_EQ(numMoves(wRook), 0);
 }
