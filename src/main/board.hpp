@@ -11,49 +11,41 @@
  * Board class
  * This is essentially a wrapper around BoardData
  * It provides a bunch of useful functions for manipulating the board
-*/
-class Board
+ */
+class BoardManager
 {
 private:
-  vector<Location> listPossiblePawnMoves(Location loc);
+  void calcPawnVision(Piece* piece);
+  void calcKVision(Piece* piece);
 
-  vector<Location> listPossiblePawnAttacks(Location loc);
+  vector<Location> kingCast(Piece* piece);
 
-  vector<Location> listPossibleKnightMoves(Location loc);
+  void cast(uint8_t startInd, Piece *piece, ViewInd viewInd, uint8_t endInd = 255);
+  void pawnCast(Piece *piece, ViewInd ind);
 
-  vector<Location> listPossibleBishopMoves(Location loc);
+  /**
+   * Update a view for a piece when another piece is moved
+  */
+  void updateView(Piece* piece, char viewInd);
 
-  vector<Location> listPossibleRookMoves(Location loc);
-
-  vector<Location> listPossibleQueenMoves(Location loc);
-
-  vector<Location> listPossibleKingMoves(Location loc);
-
-  vector<Location> cast(Location loc, Color color, int incx, int incy);
-
-  vector<Location> pruneMoves(Location loc, vector<Location> moves, Color color);
-
-  bool canCapture(Location loc, Color color);
-
-  bool move(Move move);
+  void createVision(Piece* piece);
 
   bool isValid(Move move);
+
+  void cutView(Piece *piece, ViewInd viewInd, Piece *interpos);
+  void extendView(Piece *piece, ViewInd viewInd, Location interpos);
+
+  int getDistance(Location from, Location to);
 
 public:
   BoardData board;
 
-  Board();
-  Board(const BoardData &board);
-  Board(const Board& board);
+  BoardManager();
+  BoardManager(const BoardData &board);
 
-  vector<Location> listPossibleMoves(Location loc);
-  vector<Move> findAllMoves(Color color);
+  bool isCheckmated(PieceColor color);
 
-  bool isInCheck(Color color);
-  bool isCheckmated(Color color);
-
-  // use for CLI, not for AI
-  bool moveIfAble(Move move);
+  void movePiece(Piece* piece, Location location);
 
   float getEval();
 };

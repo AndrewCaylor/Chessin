@@ -5,487 +5,283 @@
 #include <board.hpp>
 #include <piece.hpp>
 
-#define Empty ID_EMPTY
-using namespace Piece;
-
-vector<Location> Board::listPossiblePawnMoves(Location loc)
+void BoardManager::calcPawnVision(Piece *piece)
 {
-  vector<Location> validMoves = {};
-  int x = get<0>(loc);
-  int y = get<1>(loc);
-  Color color = getColor(board.getID(loc));
-
-  // TODO: handle promotion
   // TODO: handle en passant
 
-  if (color == WHITE)
+  for (ViewInd i = 0; i < piece->views.size(); i++)
   {
-    Location oneup = make_tuple(x, y + 1);
-    Location twoup = make_tuple(x, y + 2);
-    Location leftside = make_tuple(x - 1, y + 1);
-    Location rightside = make_tuple(x + 1, y + 1);
+    pawnCast(piece, i);
+  }
+}
 
-    bool canMoveOne = board.isValidLocation(oneup) && board.getID(oneup) == Empty;
-    bool canMoveTwo = canMoveOne && y == 1 && board.isValidLocation(twoup) && board.getID(twoup) == Empty;
-    bool canMoveLeft = board.isValidLocation(leftside) && board.getID(leftside) != Empty && getColor(board.getID(leftside)) != color;
-    bool canMoveRight = board.isValidLocation(rightside) && board.getID(rightside) != Empty && getColor(board.getID(rightside)) != color;
+void BoardManager::pawnCast(Piece *piece, ViewInd ind)
+{
+  if (ind == 0)
+  {
+    int y = piece->location.y;
+    bool isStarting = (piece->color == WHITE && y == 1) || (piece->color == BLACK && y == 6);
 
-    if (canMoveOne)
-    {
-      validMoves.push_back(oneup);
-    }
+    Location oneup = piece->views[0][0];
+    Location twoup = piece->views[0][1];
+
+    bool canMoveOne = board.isValidLocation(oneup) && board.getPiece(oneup) == nullptr;
+    bool canMoveTwo = canMoveOne && isStarting && board.getPiece(twoup) == nullptr;
+
     if (canMoveTwo)
     {
-      validMoves.push_back(twoup);
+      piece->moves[0].len = 2;
+      piece->views[0].len = 2;
     }
-    if (canMoveLeft)
+    else if (canMoveOne)
     {
-      validMoves.push_back(leftside);
+      piece->moves[0].len = 1;
+      if (isStarting)
+      {
+        piece->views[0].len = 2;
+      }
+      else
+      {
+        piece->views[0].len = 1;
+      }
     }
-    if (canMoveRight)
+    else
     {
-      validMoves.push_back(rightside);
+      piece->moves[0].len = 0;
+      piece->views[0].len = 1;
     }
   }
-  else if (color == BLACK)
+  else if (ind == 1 || ind == 2)
   {
-    Location onedown = make_tuple(x, y - 1);
-    Location twodown = make_tuple(x, y - 2);
-    Location leftside = make_tuple(x - 1, y - 1);
-    Location rightside = make_tuple(x + 1, y - 1);
+    Location side = piece->views[ind][0];
+    bool canMove = board.isValidLocation(side) && board.getPiece(side) != nullptr && board.getPiece(side)->color != piece->color;
 
-    bool canMoveOne = board.isValidLocation(onedown) && board.getID(onedown) == Empty;
-    bool canMoveTwo = canMoveOne && y == 6 && board.isValidLocation(twodown) && board.getID(twodown) == Empty;
-    bool canMoveLeft = board.isValidLocation(leftside) && board.getID(leftside) != Empty && getColor(board.getID(leftside)) != color;
-    bool canMoveRight = board.isValidLocation(rightside) && board.getID(rightside) != Empty && getColor(board.getID(rightside)) != color;
+    /// TODO: this never changes. Set this once somewhere else
+    piece->views[ind].len = 1;
 
-    if (canMoveOne)
-    {
-      validMoves.push_back(onedown);
-    }
-    if (canMoveTwo)
-    {
-      validMoves.push_back(twodown);
-    }
-    if (canMoveLeft)
-    {
-      validMoves.push_back(leftside);
-    }
-    if (canMoveRight)
-    {
-      validMoves.push_back(rightside);
-    }
+    canMove ? piece->moves[ind].len = 1 : piece->moves[ind].len = 0;
   }
   else
   {
-    throw runtime_error("Invalid color");
+    throw std::runtime_error("Invalid view index");
   }
-
-  return validMoves;
 }
 
-vector<Location> Board::listPossiblePawnAttacks(Location loc)
+void BoardManager::calcKVision(Piece *piece)
 {
-  vector<Location> validMoves = {};
-  int x = get<0>(loc);
-  int y = get<1>(loc);
-  Color color = getColor(board.getID(loc));
-
-  if (color == WHITE)
+  for (size_t i = 0; i < piece->views.size(); i++)
   {
-    validMoves.push_back(make_tuple(x + 1, y + 1));
-    validMoves.push_back(make_tuple(x - 1, y + 1));
-  }
-  else if (color == BLACK)
-  {
-    validMoves.push_back(make_tuple(x + 1, y - 1));
-    validMoves.push_back(make_tuple(x - 1, y - 1));
-  }
-  return validMoves;
-}
+    Location loc = piece->views[i][0];
 
-vector<Location> Board::listPossibleKnightMoves(Location loc)
-{
-  vector<Location> validMoves = {};
-  int x = get<0>(loc);
-  int y = get<1>(loc);
-  validMoves.push_back(make_tuple(x + 1, y + 2));
-  validMoves.push_back(make_tuple(x + 1, y - 2));
-  validMoves.push_back(make_tuple(x - 1, y + 2));
-  validMoves.push_back(make_tuple(x - 1, y - 2));
-  validMoves.push_back(make_tuple(x + 2, y + 1));
-  validMoves.push_back(make_tuple(x + 2, y - 1));
-  validMoves.push_back(make_tuple(x - 2, y + 1));
-  validMoves.push_back(make_tuple(x - 2, y - 1));
-
-  // reject moves that are off the board
-  for (size_t i = 0; i < validMoves.size(); i++)
-  {
-    Location move = validMoves[i];
-    if (!BoardData::isValidLocation(move))
+    if (!BoardData::isValidLocation(loc))
     {
-      validMoves.erase(validMoves.begin() + i);
-      i--;
+      piece->views[i].len = 0;
+      piece->moves[i].len = 0;
+      continue;
+    }
+
+    piece->views[i].len = 1;
+    Piece *viewed = board.getPiece(loc);
+    if (viewed == nullptr || viewed->color != piece->color)
+    {
+      piece->moves[i].len = 1;
     }
   }
-
-  // reject moves that are blocked by a piece of the same color
-  Color color = getColor(board.getID(loc));
-  for (size_t i = 0; i < validMoves.size(); i++)
-  {
-    Location move = validMoves[i];
-    ID piece = board.getID(move);
-    if (getColor(piece) == color)
-    {
-      validMoves.erase(validMoves.begin() + i);
-      i--;
-    }
-  }
-
-  return validMoves;
 }
 
-vector<Location> Board::cast(Location loc, Color color, int incx, int incy)
+/**
+ * @brief Cast a piece's vision in a direction
+ * Starts from "startInd" and goes until it hits a piece or the edge of the board
+ * Updates the piece's "views" and "moves" vectors
+ */
+void BoardManager::cast(uint8_t startInd, Piece *piece, ViewInd viewInd, uint8_t endInd)
 {
-  vector<Location> validMoves = {};
-  int x = get<0>(loc);
-  int y = get<1>(loc);
+  Vector view = piece->views[viewInd];
+  Location loc = view[startInd];
+  int i = startInd;
+  PieceColor color = piece->color;
 
-  x += incx;
-  y += incy;
-  while (x < 8 && y < 8 && x >= 0 && y >= 0)
+  while (BoardData::isValidLocation(loc) && i <= endInd)
   {
-    ID piece = board.getID(make_tuple(x, y));
-    if (piece != Empty)
+    Piece *viewed = board.getPiece(loc);
+    if (viewed != nullptr)
     {
-      if (color != getColor(piece))
+      piece->views[viewInd].len = i + 1;
+      if (color == viewed->color)
       {
-        validMoves.push_back(make_tuple(x, y));
+        piece->moves[viewInd].len = i;
       }
-      break;
+      else
+      {
+        piece->moves[viewInd].len = i + 1;
+      }
+      return;
     }
-    validMoves.push_back(make_tuple(x, y));
-    x += incx;
-    y += incy;
+    i++;
+    loc = view[i];
   }
 
-  return validMoves;
-}
-
-vector<Location> Board::listPossibleBishopMoves(Location loc)
-{
-  vector<Location> validMoves = {};
-  Color color = getColor(board.getID(loc));
-
-  vector<Location> validMoves1 = this->cast(loc, color, 1, 1);
-  vector<Location> validMoves2 = this->cast(loc, color, 1, -1);
-  vector<Location> validMoves3 = this->cast(loc, color, -1, 1);
-  vector<Location> validMoves4 = this->cast(loc, color, -1, -1);
-
-  validMoves.insert(validMoves.end(), validMoves1.begin(), validMoves1.end());
-  validMoves.insert(validMoves.end(), validMoves2.begin(), validMoves2.end());
-  validMoves.insert(validMoves.end(), validMoves3.begin(), validMoves3.end());
-  validMoves.insert(validMoves.end(), validMoves4.begin(), validMoves4.end());
-
-  return validMoves;
-}
-
-vector<Location> Board::listPossibleRookMoves(Location loc)
-{
-  vector<Location> validMoves = {};
-  Color color = getColor(board.getID(loc));
-
-  vector<Location> validMoves1 = this->cast(loc, color, 1, 0);
-  vector<Location> validMoves2 = this->cast(loc, color, -1, 0);
-  vector<Location> validMoves3 = this->cast(loc, color, 0, 1);
-  vector<Location> validMoves4 = this->cast(loc, color, 0, -1);
-
-  validMoves.insert(validMoves.end(), validMoves1.begin(), validMoves1.end());
-  validMoves.insert(validMoves.end(), validMoves2.begin(), validMoves2.end());
-  validMoves.insert(validMoves.end(), validMoves3.begin(), validMoves3.end());
-  validMoves.insert(validMoves.end(), validMoves4.begin(), validMoves4.end());
-
-  return validMoves;
-}
-
-vector<Location> Board::listPossibleQueenMoves(Location loc)
-{
-  vector<Location> validMoves = {};
-  vector<Location> bishopMoves = this->listPossibleBishopMoves(loc);
-  vector<Location> rookMoves = this->listPossibleRookMoves(loc);
-
-  validMoves.insert(validMoves.end(), bishopMoves.begin(), bishopMoves.end());
-  validMoves.insert(validMoves.end(), rookMoves.begin(), rookMoves.end());
-  return validMoves;
-}
-
-vector<Location> Board::listPossibleKingMoves(Location loc)
-{
-  vector<Location> validMoves = {};
-  int x = get<0>(loc);
-  int y = get<1>(loc);
-  validMoves.push_back(make_tuple(x + 1, y + 1));
-  validMoves.push_back(make_tuple(x + 1, y - 1));
-  validMoves.push_back(make_tuple(x - 1, y + 1));
-  validMoves.push_back(make_tuple(x - 1, y - 1));
-  validMoves.push_back(make_tuple(x + 1, y));
-  validMoves.push_back(make_tuple(x - 1, y));
-  validMoves.push_back(make_tuple(x, y + 1));
-  validMoves.push_back(make_tuple(x, y - 1));
-
-  // reject moves that are off the board
-  for (size_t i = 0; i < validMoves.size(); i++)
-  {
-    Location move = validMoves[i];
-    if (!BoardData::isValidLocation(move))
-    {
-      validMoves.erase(validMoves.begin() + i);
-      i--;
-    }
-  }
-
-  return validMoves;
+  piece->views[viewInd].len = i;
+  piece->moves[viewInd].len = i;
 }
 
 // TODO (efficiency): process pinned pieces first, determine axis they are pinned on
 // now we can prune the moves beforehand so we dont need to check them for every possiuble move
 // idk this is explained poorly but you get tht eidea
 
-bool Board::isInCheck(Color color)
-{
-  if (color == NONE)
-    throw runtime_error("Invalid color");
-
-  // get king location
-  Location kingLoc;
-  if (color == WHITE)
-  {
-    kingLoc = board.getLocation(W_KING);
-  }
-  else
-  {
-    kingLoc = board.getLocation(B_KING);
-  }
-
-  // get all pieces of the opposite color
-  int startID;
-  int endID;
-
-  if (color == WHITE)
-  {
-    startID = MIN_B_ID;
-    endID = MAX_B_ID;
-  }
-  else
-  {
-    startID = MIN_W_ID;
-    endID = MAX_W_ID;
-  }
-
-  for (int piece = startID; piece <= endID; piece++)
-  {
-    Location loc = board.getLocation(toID(piece));
-    bool exists = BoardData::isValidLocation(loc);
-
-    if (!exists)
-    {
-      continue;
-    }
-
-    vector<Location> moves = listPossibleMoves(loc);
-
-    for (Location move : moves)
-    {
-      if (move == kingLoc)
-      {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-vector<Location> Board::pruneMoves(Location loc, vector<Location> moves, Color color)
-{
-  vector<Location> validMoves = {};
-  for (size_t i = 0; i < moves.size(); i++)
-  {
-    // test out new move
-    Location move = moves[i];
-    ID coveredPiece = board.getID(move);
-
-    board.movePiece(make_tuple(loc, move));
-    bool inCheck = isInCheck(color);
-    board.movePiece(make_tuple(move, loc));
-    board.setPiece(move, coveredPiece);
-
-    if (!inCheck)
-    {
-      validMoves.push_back(move);
-    }
-  }
-  return validMoves;
-}
-
-Board::Board()
+BoardManager::BoardManager()
 {
   this->board = BoardData();
 }
 
-vector<Location> Board::listPossibleMoves(Location loc)
+int BoardManager::getDistance(Location from, Location to)
 {
+  int dx = to.x - from.x;
+  int dy = to.y - from.y;
+  return max(abs(dx), abs(dy));
+}
 
-  ID piece = board.getID(loc);
-  if (piece == Empty)
-  {
-    return {};
-  }
-  Type type = getType(piece);
-  vector<Location> validMoves = {};
+void BoardManager::extendView(Piece *piece, ViewInd viewInd, Location interpos)
+{
+  PieceType type = piece->type;
+
   switch (type)
   {
-  case PAWN:
-    validMoves = listPossiblePawnMoves(loc);
-    break;
   case KNIGHT:
-    validMoves = listPossibleKnightMoves(loc);
-    break;
-  case BISHOP:
-    validMoves = listPossibleBishopMoves(loc);
-    break;
-  case ROOK:
-    validMoves = listPossibleRookMoves(loc);
-    break;
-  case QUEEN:
-    validMoves = listPossibleQueenMoves(loc);
-    break;
+    piece->moves[viewInd].len = 1;
+    return;
   case KING:
-    validMoves = listPossibleKingMoves(loc);
-    break;
+    piece->moves[viewInd].len = 1;
+    return;
+  case PAWN:
+    pawnCast(piece, viewInd);
+    return;
   default:
     break;
   }
 
-  return validMoves;
+  int extendFromInd = getDistance(piece->location, interpos);
+  cast(extendFromInd, piece, viewInd);
+  board.setVision(piece, viewInd, extendFromInd);
 }
 
-bool Board::isValid(Move move)
+void BoardManager::cutView(Piece *piece, ViewInd viewInd, Piece *interpos)
 {
-  Location from = get<0>(move);
-  Location to = get<1>(move);
+  PieceType type = piece->type;
+  bool interposSameColor = interpos->color == piece->color;
 
-  vector<Location> validMoves = listPossibleMoves(from);
-
-  for (Location move : validMoves)
+  switch (type)
   {
-    if (move == to)
+  case KNIGHT:
+  case KING:
+    if (interposSameColor)
     {
-      return true;
+      piece->moves[viewInd].len = 0;
     }
+    return;
+  case PAWN:
+    pawnCast(piece, viewInd);
+    return;
+  default:
+    break;
   }
-  return false;
-};
 
-bool Board::moveIfAble(Move move)
-{
-  if (isValid(move))
+  int cutInd = getDistance(piece->location, interpos->location);
+  board.removeVision(piece, viewInd, cutInd);
+  piece->views[viewInd].len = cutInd;
+
+  // if the interposing piece is the same color as the piece, then we need to cut one more
+  if (interposSameColor)
   {
-    board.movePiece(move);
-    return true;
+    cutInd--;
   }
-  return false;
+  piece->moves[viewInd].len = cutInd;
 }
 
-Board::Board(const Board &board)
+void BoardManager::createVision(Piece *piece)
 {
-  this->board = board.board;
+  PieceType type = piece->type;
+  switch (type)
+  {
+  case KNIGHT:
+  case KING:
+    calcKVision(piece);
+    board.setVision(piece);
+
+    break;
+  case PAWN:
+    calcPawnVision(piece);
+    board.setVision(piece);
+
+    break;
+  default:
+    for (size_t i = 0; i < piece->views.size(); i++)
+    {
+      cast(0, piece, i);
+    }
+
+    board.setVision(piece);
+    break;
+  }
 }
 
-Board::Board(const BoardData &board)
+BoardManager::BoardManager(const BoardData &board)
 {
   this->board = board;
+
+  for (size_t i = 0; i < board.whitePieces.size(); i++)
+  {
+    Piece *piece = board.whitePieces[i];
+    createVision(piece);
+  }
+
+  for (size_t i = 0; i < board.blackPieces.size(); i++)
+  {
+    Piece *piece = board.blackPieces[i];
+    createVision(piece);
+  }
 }
 
-float Board::getEval()
+void BoardManager::movePiece(Piece *piece, Location loc)
 {
-  bool isCheckmate = isCheckmated(WHITE);
-  if (isCheckmate)
+  // remove the piece and its vision from the board
+  board.setPiece(piece->location, nullptr);
+
+  // recalculate vision for all pieces that can see this piece
+  vector<tuple<Piece *, ViewInd>> fromViewersWhite = board.getViews(piece->location, PieceColor::WHITE);
+  for (size_t i = 0; i < fromViewersWhite.size(); i++)
   {
-    return -1000000;
+    Piece *viewer = get<0>(fromViewersWhite[i]);
+    char viewInd = get<1>(fromViewersWhite[i]);
+    extendView(viewer, viewInd, piece->location);
   }
-  isCheckmate = isCheckmated(BLACK);
-  if (isCheckmate)
+  vector<tuple<Piece *, ViewInd>> fromViewersBlack = board.getViews(piece->location, PieceColor::BLACK);
+  for (size_t i = 0; i < fromViewersBlack.size(); i++)
   {
-    return 1000000;
+    Piece *viewer = get<0>(fromViewersBlack[i]);
+    char viewInd = get<1>(fromViewersBlack[i]);
+    extendView(viewer, viewInd, piece->location);
   }
 
-  // loop through all pieces and add up their values
-  float eval = 0;
-  for (int i = MIN_W_ID; i <= MAX_W_ID; i++)
+  // also check around the old location for pieces that were
+
+  // move the piece
+  board.setPiece(loc, piece);
+  createVision(piece);
+
+  // recalculate vision for all pieces that can see this piece
+  vector<tuple<Piece *, ViewInd>> toViewersWhite = board.getViews(piece->location, PieceColor::WHITE);
+  for (size_t i = 0; i < toViewersWhite.size(); i++)
   {
-
-    Location loc = board.getLocation(toID(i));
-    if (board.isValidLocation(loc))
-    {
-      eval += getValue(getType(toID(i)));
-    }
+    Piece *viewer = get<0>(toViewersWhite[i]);
+    char viewInd = get<1>(toViewersWhite[i]);
+    cutView(viewer, viewInd, piece);
   }
-
-  for (int i = MIN_B_ID; i <= MAX_B_ID; i++)
+  vector<tuple<Piece *, ViewInd>> toViewersBlack = board.getViews(piece->location, PieceColor::BLACK);
+  for (size_t i = 0; i < toViewersBlack.size(); i++)
   {
-    Location loc = board.getLocation(toID(i));
-    if (board.isValidLocation(loc))
-    {
-      eval -= getValue(getType(toID(i)));
-    }
+    Piece *viewer = get<0>(toViewersBlack[i]);
+    char viewInd = get<1>(toViewersBlack[i]);
+    cutView(viewer, viewInd, piece);
   }
-
-  return eval;
-}
-
-bool Board::isCheckmated(Color c){
-  bool inCheck = isInCheck(c);
-  if (!inCheck){
-    return false;
-  }
-
-  vector<tuple<Location, Location>> moves = findAllMoves(c);
-  for (size_t i = 0; i < moves.size(); i++)
-  {
-    Board newBoard = Board(board);
-    newBoard.moveIfAble(moves[i]);
-    if (!newBoard.isInCheck(c)){
-      return false;
-    }
-  }
-}
-
-vector<tuple<Location, Location>> Board::findAllMoves(Color color)
-{
-  vector<tuple<Location, Location>> moves = {};
-  int startID = color * 16;
-  int endID = color * 16 + 16;
-
-  for (int piece = startID; piece < endID; piece++)
-  {
-    Location from = board.getLocation(toID(piece));
-    bool exists = BoardData::isValidLocation(from);
-
-    if (!exists)
-    {
-      continue;
-    }
-
-    vector<Location> possibleMoves = listPossibleMoves(from);
-
-    // prune moves that are invalid
-    possibleMoves = pruneMoves(from, possibleMoves, color);
-
-    for (size_t i = 0; i < possibleMoves.size(); i++)
-    {
-      Location to = possibleMoves[i];
-      moves.push_back(make_tuple(from, to));
-    }
-  }
-  return moves;
 }

@@ -1,65 +1,46 @@
 #include <boardData.hpp>
+#include <piece.hpp>
 
-ID BoardData::getID(Location location)
+Piece *BoardData::getPiece(Location loc)
 {
-  if (get<0>(location) >= 8 || get<1>(location) >= 8 || get<0>(location) < 0 || get<1>(location) < 0)
+  if (!isValidLocation(loc))
   {
-    throw runtime_error("GetID: Invalid location");
+    throw runtime_error("getPiece: Invalid location");
   }
-
-  return board[get<1>(location)][get<0>(location)];
+  return board[loc.y][loc.x]->piece;
 }
 
-Location BoardData::getLocation(ID id)
+void BoardData::setPiece(Location loc, Piece *piece)
 {
-  if (id < MIN_W_ID || id > MAX_B_ID)
+  if (!isValidLocation(loc))
   {
-    throw runtime_error("GetLocation: Invalid ID");
+    throw runtime_error("setPiece: Invalid location");
   }
-  return pieces[id];
+  Square *square = board[loc.y][loc.x];
+
+  // push whatever piece (or nullptr) was there onto the history stack
+  square->pieceHistory.push(square->piece);
+  // when a piece is removed from the board, remove lines of sight
+  if (square->piece != nullptr)
+  {
+    removeVision(square->piece);
+  }
+
+  square->piece = piece;
+  if (piece != nullptr)
+    piece->location = loc;
 }
 
-void BoardData::setPiece(Location location, ID piece)
+void BoardData::revertSquare(Location loc)
 {
-  board[get<1>(location)][get<0>(location)] = piece;
-  if (piece == ID_EMPTY)
+  if (!isValidLocation(loc))
   {
-    return;
+    throw runtime_error("revertSquare: Invalid location");
   }
-  pieces[piece] = location;
-}
-
-void BoardData::movePiece(Move move)
-{
-  Location from = get<0>(move);
-  Location to = get<1>(move);
-
-  if (get<0>(from) >= 8 || get<1>(from) >= 8)
-  {
-    throw runtime_error("MovePiece: Invalid location (from)");
-  }
-  if (get<0>(to) >= 8 || get<1>(to) >= 8)
-  {
-    throw runtime_error("MovePiece: Invalid location (to)");
-  }
-
-  ID piece = getID(from);
-
-  ID capturedPiece = getID(to);
-  if (capturedPiece != ID_EMPTY)
-  {
-    pieces[capturedPiece] = make_tuple(-1, -1);
-  }
-  setPiece(from, ID_EMPTY);
-  setPiece(to, piece);
-
-  pieces[piece] = to;
-}
-
-BoardData::BoardData(const BoardData &board)
-{
-  this->board = BoardVec(board.board);
-  pieces = std::vector<Location>(board.pieces);
+  Square *square = board[loc.y][loc.x];
+  Piece *piece = square->pieceHistory.top();
+  square->pieceHistory.pop();
+  square->piece = piece;
 }
 
 string BoardData::toString()
@@ -69,7 +50,15 @@ string BoardData::toString()
   {
     for (int x = 0; x < 8; x++)
     {
-      boardStr += Piece::toChar(getID(make_tuple(x, y)));
+      Piece *piece = getPiece(XY(x, y));
+      if (piece == nullptr)
+      {
+        boardStr += ".";
+      }
+      else
+      {
+        boardStr += piece->toChar();
+      }
     }
     boardStr += " " + to_string(y + 1);
     boardStr += "\n";
@@ -81,196 +70,235 @@ string BoardData::toString()
 
 BoardData::BoardData()
 {
-  pieces = vector<Location>(32);
-  for (int i = 0; i < 8; i++)
+  for (int y = 0; y < 8; y++)
   {
-    pieces[i] = make_tuple(i, 0);
-    pieces[i + 8] = make_tuple(i, 1);
-    pieces[i + 16] = make_tuple(i, 7);
-    pieces[i + 24] = make_tuple(i, 6);
+    vector<Square *> row;
+    for (int x = 0; x < 8; x++)
+    {
+      row.push_back(new Square());
+    }
+    board.push_back(row);
   }
+}
 
-  board = BoardVec(8, RowVec(8, ID_EMPTY));
-  for (int id = MIN_W_ID; id <= MAX_B_ID; id++)
-  {
-    Location loc = pieces[id];
-    setPiece(loc, toID(id));
-  }
+BoardData::~BoardData()
+{
+  // for (size_t i = 0; i < board.size(); i++)
+  // {
+  //   for (size_t j = 0; j < board[i].size(); j++)
+  //   {
+  //     delete board[i][j];
+  //   }
+  // }
+
+  // for (size_t i = 0; i < whitePieces.size(); i++)
+  // {
+  //   delete whitePieces[i];
+  // }
+  // for (size_t i = 0; i < blackPieces.size(); i++)
+  // {
+  //   delete blackPieces[i];
+  // }
 }
 
 bool BoardData::isValidLocation(Location location)
 {
-  int x = get<0>(location);
-  int y = get<1>(location);
+  int x = location.x;
+  int y = location.y;
   return x >= 0 && x < 8 && y >= 0 && y < 8;
 }
 
 BoardData::BoardData(vector<string> boardstr)
 {
-  board = BoardVec(8, RowVec(8, ID_EMPTY));
-  pieces = vector<Location>(32);
-
-  int numWhiteRooks = 0;
-  int numWhiteKnights = 0;
-  int numWhiteBishops = 0;
-  int numWhiteQueens = 0;
-  int numWhiteKings = 0;
-  int numWhitePawns = 0;
-
-  int numBlackRooks = 0;
-  int numBlackKnights = 0;
-  int numBlackBishops = 0;
-  int numBlackQueens = 0;
-  int numBlackKings = 0;
-  int numBlackPawns = 0;
+  for (int y = 0; y < 8; y++)
+  {
+    vector<Square *> row;
+    for (int x = 0; x < 8; x++)
+    {
+      row.push_back(new Square());
+    }
+    board.push_back(row);
+  }
 
   // technically constructing this upside down, but it doesn't matter
   for (int y = 0; y < 8; y++)
   {
     for (int x = 0; x < 8; x++)
     {
-      const char c = boardstr[7-y][x];
-      Type type = toType(c);
-      Color color;
-      // if lowercase, black
-      if (c >= 'a' && c <= 'z')
+      const char c = boardstr[7 - y][x];
+      if (c == '.')
       {
-        color = BLACK;
+        continue;
       }
-      // if uppercase, white
+
+      Location loc = XY(x, y);
+      Piece *piece = new Piece(c, loc);
+
+      if (piece->type == KING)
+      {
+        if (piece->color == WHITE)
+        {
+          if (wKing != nullptr)
+          {
+            throw runtime_error("BoardData: Multiple white kings");
+          }
+          wKing = piece;
+        }
+        else
+        {
+          if (bKing != nullptr)
+          {
+            throw runtime_error("BoardData: Multiple black kings");
+          }
+          bKing = piece;
+        }
+      }
+
+      if (piece->color == WHITE)
+      {
+        whitePieces.push_back(piece);
+      }
       else
       {
-        color = WHITE;
+        blackPieces.push_back(piece);
       }
 
-      Location loc = make_tuple(x, y);
-
-      switch (type)
-      {
-      case KING:
-        if (color == WHITE)
-        {
-          numWhiteKings++;
-          if (numWhiteKings < 1)
-          {
-            throw runtime_error("Invalid board: Too many white kings");
-          }
-          setPiece(loc, W_KING);
-        }
-        else
-        {
-          numBlackKings++;
-          if (numBlackKings > 1)
-          {
-            throw runtime_error("Invalid board: Too many black kings");
-          }
-          setPiece(loc, B_KING);
-        }
-        break;
-      case QUEEN:
-        if (color == WHITE)
-        {
-          numWhiteQueens++;
-          if (numWhiteQueens > 1)
-          {
-            throw runtime_error("Invalid board: Too many white queens");
-          }
-          setPiece(loc, W_QUEEN);
-        }
-        else
-        {
-          numBlackQueens++;
-          if (numBlackQueens > 1)
-          {
-            throw runtime_error("Invalid board: Too many black queens");
-          }
-          setPiece(loc, B_QUEEN);
-        }
-        break;
-      case PAWN:
-        if (color == WHITE)
-        {
-          numWhitePawns++;
-          if (numWhitePawns > 8)
-          {
-            throw runtime_error("Invalid board: Too many white pawns");
-          }
-          setPiece(loc, (ID)(W_PAWN_1 + numWhitePawns - 1));
-        }
-        else
-        {
-          numBlackPawns++;
-          if (numBlackPawns > 8)
-          {
-            throw runtime_error("Invalid board: Too many black pawns");
-          }
-          setPiece(loc, (ID)(B_PAWN_1 + numBlackPawns - 1));
-        }
-        break;
-      case KNIGHT:
-        if (color == WHITE)
-        {
-          numWhiteKnights++;
-          if (numWhiteKnights > 2)
-          {
-            throw runtime_error("Invalid board: Too many white knights");
-          }
-          setPiece(loc, numWhiteKnights == 1 ? W_KNIGHT_1 : W_KNIGHT_2);
-        }
-        else
-        {
-          numBlackKnights++;
-          if (numBlackKnights > 2)
-          {
-            throw runtime_error("Invalid board: Too many black knights");
-          }
-          setPiece(loc, numBlackKnights == 1 ? B_KNIGHT_1 : B_KNIGHT_2);
-        }
-        break;
-      case BISHOP:
-        if (color == WHITE)
-        {
-          numWhiteBishops++;
-          if (numWhiteBishops > 2)
-          {
-            throw runtime_error("Invalid board: Too many white bishops");
-          }
-          setPiece(loc, numWhiteBishops == 1 ? W_BISHOP_1 : W_BISHOP_2);
-        }
-        else
-        {
-          numBlackBishops++;
-          if (numBlackBishops > 2)
-          {
-            throw runtime_error("Invalid board: Too many black bishops");
-          }
-          setPiece(loc, numBlackBishops == 1 ? B_BISHOP_1 : B_BISHOP_2);
-        }
-        break;
-      case ROOK:
-        if (color == WHITE)
-        {
-          numWhiteRooks++;
-          if (numWhiteRooks > 2)
-          {
-            throw runtime_error("Invalid board: Too many white rooks");
-          }
-          setPiece(loc, numWhiteRooks == 1 ? W_ROOK_1 : W_ROOK_2);
-        }
-        else
-        {
-          numBlackRooks++;
-          if (numBlackRooks > 2)
-          {
-            throw runtime_error("Invalid board: Too many black rooks");
-          }
-          setPiece(loc, numBlackRooks == 1 ? B_ROOK_1 : B_ROOK_2);
-        }
-        break;
-      default:
-        setPiece(loc, ID_EMPTY);
-        break;
-      }
+      setPiece(loc, piece);
     }
   }
+
+  if (wKing == nullptr)
+  {
+    throw runtime_error("BoardData: No white king");
+  }
+  if (bKing == nullptr)
+  {
+    throw runtime_error("BoardData: No black king");
+  }
+}
+
+void BoardData::removeVision(Piece *piece, ViewInd viewInd, uint8_t start, uint8_t end)
+{
+  if (end == 255)
+  {
+    end = piece->views[viewInd].len;
+  }
+
+  if (piece->color == WHITE)
+  {
+    for (uint8_t j = start; j < end; j++)
+    {
+      Location loc = piece->views[viewInd][j];
+      board[loc.y][loc.x]->viewsMapWhite.erase(piece);
+    }
+  }
+  else
+  {
+    for (uint8_t j = start; j < end; j++)
+    {
+      Location loc = piece->views[viewInd][j];
+      board[loc.y][loc.x]->viewsMapBlack.erase(piece);
+    }
+  }
+}
+
+void BoardData::setVision(Piece *piece, ViewInd viewInd, uint8_t start, uint8_t end)
+{
+  if (end == 255)
+  {
+    end = piece->views[viewInd].len;
+  }
+
+  if (piece->color == WHITE)
+  {
+    for (uint8_t j = start; j < end; j++)
+    {
+      Location loc = piece->views[viewInd][j];
+      board[loc.y][loc.x]->viewsMapWhite[piece] = viewInd;
+    }
+  }
+  else
+  {
+    for (uint8_t j = start; j < end; j++)
+    {
+      Location loc = piece->views[viewInd][j];
+      board[loc.y][loc.x]->viewsMapBlack[piece] = viewInd;
+    }
+  }
+}
+
+void BoardData::removeVision(Piece *piece)
+{
+  if (piece == nullptr)
+  {
+    return;
+  }
+
+  vector<Vector> los = piece->views;
+  for (size_t i = 0; i < los.size(); i++)
+  {
+    removeVision(piece, i);
+  }
+}
+
+void BoardData::setVision(Piece *piece)
+{
+  if (piece == nullptr)
+  {
+    return;
+  }
+
+  vector<Vector> los = piece->views;
+  for (size_t i = 0; i < los.size(); i++)
+  {
+    setVision(piece, i);
+  }
+}
+
+vector<tuple<Piece *, ViewInd>> BoardData::getViews(Location loc, PieceColor c)
+{
+  Square *square = board[loc.y][loc.x];
+  if (c == WHITE)
+  {
+    return vector<tuple<Piece *, ViewInd>>(square->viewsMapWhite.begin(), square->viewsMapWhite.end());
+  }
+  else
+  {
+    return vector<tuple<Piece *, ViewInd>>(square->viewsMapBlack.begin(), square->viewsMapBlack.end());
+  }
+}
+
+int BoardData::getNumViewers(Location loc, PieceColor c)
+{
+  Square *square = board[loc.y][loc.x];
+  if (c == WHITE)
+  {
+    return square->viewsMapWhite.size();
+  }
+  else
+  {
+    return square->viewsMapBlack.size();
+  }
+}
+
+bool BoardData::isInCheck(PieceColor color)
+{
+  Piece *king = color == WHITE ? wKing : bKing;
+  return getNumViewers(king->location, !color) > 0;
+}
+
+bool BoardData::isCheckmated(PieceColor color)
+{
+  Piece *king = color == WHITE ? wKing : bKing;
+
+  for (Vector vec : king->moves)
+  {
+    Location loc = vec[0];
+    if (getPiece(loc) == nullptr)
+    {
+      return false;
+    }
+  }
+
+  return true;
 }

@@ -1,77 +1,88 @@
 #pragma once
+#include <map>
+#include <stack>
+#include <vector>
+#include <cstdint>
+using namespace std;
 
-#define MIN_W_ID W_ROOK_1
-#define MAX_W_ID W_PAWN_8
-#define MIN_B_ID B_ROOK_1
-#define MAX_B_ID B_PAWN_8
-#define toID(i) static_cast<ID>(i)
+typedef uint8_t ViewInd;
 
-namespace Piece
+enum PieceType
 {
-  enum ID
-  {
-    W_ROOK_1,
-    W_KNIGHT_1,
-    W_BISHOP_1,
-    W_QUEEN,
-    W_KING,
-    W_BISHOP_2,
-    W_KNIGHT_2,
-    W_ROOK_2,
-    W_PAWN_1,
-    W_PAWN_2,
-    W_PAWN_3,
-    W_PAWN_4,
-    W_PAWN_5,
-    W_PAWN_6,
-    W_PAWN_7,
-    W_PAWN_8,
+  KING,
+  QUEEN,
+  PAWN,
+  KNIGHT,
+  BISHOP,
+  ROOK,
+};
 
-    B_ROOK_1,
-    B_KNIGHT_1,
-    B_BISHOP_1,
-    B_QUEEN,
-    B_KING,
-    B_BISHOP_2,
-    B_KNIGHT_2,
-    B_ROOK_2,
-    B_PAWN_1,
-    B_PAWN_2,
-    B_PAWN_3,
-    B_PAWN_4,
-    B_PAWN_5,
-    B_PAWN_6,
-    B_PAWN_7,
-    B_PAWN_8,
+enum PieceColor
+{
+  BLACK,
+  WHITE,
+};
 
-    ID_EMPTY = -1
-  };
+PieceColor operator!(PieceColor& c);
 
-  enum Type
-  {
-    KING,
-    QUEEN,
-    PAWN,
-    KNIGHT,
-    BISHOP,
-    ROOK,
+struct Location
+{
+  char x;
+  char y;
+};
 
-    TYPE_EMPTY = -1
-  };
+struct Move
+{
+  Location from;
+  Location to;
+};
 
-  enum Color
-  {
-    WHITE = 0,
-    BLACK = 1,
-    NONE = 2
-  };
+class Vector
+{
+  Location *start;
+  int8_t incx;
+  int8_t incy;
 
-  char toChar(ID piece);
-  Type toType(char piece);
-  
-  Color getColor(ID piece);
+public:
+  uint8_t len;
+  Vector(Location *start, uint8_t len, int8_t incx, int8_t incy);
+  Location operator[](uint8_t i);
+};
 
-  Type getType(ID piece);
+class Piece
+{
+  void init(vector<Vector> *views);
 
-  float getValue(Type type);
+public:
+  PieceType type;
+  PieceColor color;
+  Location location;
+  int value;
+  vector<Vector> views;
+  vector<Vector> moves;
+  bool isOnBoard;
+
+  Piece(PieceType type, PieceColor color, Location location);
+  Piece(char c, Location location);
+  ~Piece();
+  int getValue();
+  char toChar();
+};
+
+namespace util
+{
+  Location XY(uint8_t x, uint8_t y);
+  Move newMove(Location from, Location to);
 }
+
+class Square
+{
+public:
+  bool occupied;
+  Piece *piece;
+  std::map<Piece *, ViewInd> viewsMapWhite;
+  std::map<Piece *, ViewInd> viewsMapBlack;
+  std::stack<Piece *> pieceHistory;
+
+  Square();
+};

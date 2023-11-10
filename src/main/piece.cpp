@@ -1,146 +1,222 @@
 #include <piece.hpp>
+#include <iostream>
 
-char Piece::toChar(ID piece)
+char Piece::toChar()
 {
-  switch (piece)
+  char c = ' ';
+  switch (this->type)
   {
-  case W_KING:
-    return 'K';
-  case W_QUEEN:
-    return 'Q';
-  case W_PAWN_1:
-  case W_PAWN_2:
-  case W_PAWN_3:
-  case W_PAWN_4:
-  case W_PAWN_5:
-  case W_PAWN_6:
-  case W_PAWN_7:
-  case W_PAWN_8:
-    return 'P';
-  case W_KNIGHT_1:
-  case W_KNIGHT_2:
-    return 'N';
-  case W_BISHOP_1:
-  case W_BISHOP_2:
-    return 'B';
-  case W_ROOK_1:
-  case W_ROOK_2:
-    return 'R';
-  case B_KING:
-    return 'k';
-  case B_QUEEN:
-    return 'q';
-  case B_PAWN_1:
-  case B_PAWN_2:
-  case B_PAWN_3:
-  case B_PAWN_4:
-  case B_PAWN_5:
-  case B_PAWN_6:
-  case B_PAWN_7:
-  case B_PAWN_8:
-    return 'p';
-  case B_KNIGHT_1:
-  case B_KNIGHT_2:
-    return 'n';
-  case B_BISHOP_1:
-  case B_BISHOP_2:
-    return 'b';
-  case B_ROOK_1:
-  case B_ROOK_2:
-    return 'r';
-  case ID_EMPTY:
+  case KING:
+    c = 'K';
+    break;
+  case QUEEN:
+    c = 'Q';
+    break;
+  case PAWN:
+    c = 'P';
+    break;
+  case KNIGHT:
+    c = 'N';
+    break;
+  case BISHOP:
+    c = 'B';
+    break;
+  case ROOK:
+    c = 'R';
+    break;
+  default:
     return '.';
-  default:
-    return '?';
   }
-}
 
-Piece::Type Piece::toType(char c){
-  switch (c)
+  if (this->color == BLACK)
   {
-  case 'K':
-  case 'k':
-    return KING;
-  case 'Q':
-  case 'q':
-    return QUEEN;
-  case 'P':
-  case 'p':
-    return PAWN;
-  case 'N':
-  case 'n':
-    return KNIGHT;
-  case 'B':
-  case 'b':
-    return BISHOP;
-  case 'R':
-  case 'r':
-    return ROOK;
-  default:
-    return TYPE_EMPTY;
+    c = c + 32;
   }
+  return c;
 }
 
-
-Piece::Color Piece::getColor(ID piece)
+Piece::Piece(PieceType type, PieceColor color, Location location)
 {
-  if (piece == ID_EMPTY)
-  {
-    return NONE;
-  }
-  if (piece < 16)
-  {
-    return WHITE;
-  }
-  return BLACK;
+  this->type = type;
+  this->color = color;
+  this->location = location;
+  this->isOnBoard = true;
+  this->views = {};
+  this->moves = {};
+
+  this->init(&views);
+  this->init(&moves);
 }
 
-Piece::Type Piece::getType(ID piece)
+void Piece::init(vector<Vector> *vec)
 {
-  piece = (ID)(piece % 16);
-  switch (piece)
-  {
-  case W_KING:
-    return KING;
-  case W_QUEEN:
-    return QUEEN;
-  case W_PAWN_1:
-  case W_PAWN_2:
-  case W_PAWN_3:
-  case W_PAWN_4:
-  case W_PAWN_5:
-  case W_PAWN_6:
-  case W_PAWN_7:
-  case W_PAWN_8:
-    return PAWN;
-  case W_KNIGHT_1:
-  case W_KNIGHT_2:
-    return KNIGHT;
-  case W_BISHOP_1:
-  case W_BISHOP_2:
-    return BISHOP;
-  case W_ROOK_1:
-  case W_ROOK_2:
-    return ROOK;
-  default:
-    return TYPE_EMPTY;
-  }
-}
 
-float Piece::getValue(Type piece){
-  switch (piece)
+  switch (this->type)
   {
   case QUEEN:
-    return 9;
+    this->value = 9;
+
+    vec->push_back(Vector(&this->location, 0, 0, 1));
+    vec->push_back(Vector(&this->location, 0, 0, -1));
+    vec->push_back(Vector(&this->location, 0, 1, 0));
+    vec->push_back(Vector(&this->location, 0, -1, 0));
+    vec->push_back(Vector(&this->location, 0, 1, 1));
+    vec->push_back(Vector(&this->location, 0, 1, -1));
+    vec->push_back(Vector(&this->location, 0, -1, 1));
+    vec->push_back(Vector(&this->location, 0, -1, -1));
+    break;
+  case KING:
+    this->value = 0;
+    vec->push_back(Vector(&this->location, 0, 0, 1));
+    vec->push_back(Vector(&this->location, 0, 0, -1));
+    vec->push_back(Vector(&this->location, 0, 1, 0));
+    vec->push_back(Vector(&this->location, 0, -1, 0));
+    vec->push_back(Vector(&this->location, 0, 1, 1));
+    vec->push_back(Vector(&this->location, 0, 1, -1));
+    vec->push_back(Vector(&this->location, 0, -1, 1));
+    vec->push_back(Vector(&this->location, 0, -1, -1));
+
+    break;
   case PAWN:
-    return 1;
+    this->value = 1;
+    if (this->color == WHITE)
+    {
+      vec->push_back(Vector(&this->location, 0, 0, 1));
+      vec->push_back(Vector(&this->location, 0, -1, 1));
+      vec->push_back(Vector(&this->location, 0, 1, 1));
+    }
+    else
+    {
+      vec->push_back(Vector(&this->location, 0, 0, -1));
+      vec->push_back(Vector(&this->location, 0, -1, -1));
+      vec->push_back(Vector(&this->location, 0, 1, -1));
+    }
+
+    break;
   case KNIGHT:
-    return 3;
+    this->value = 3;
+    vec->push_back(Vector(&this->location, 0, 1, 2));
+    vec->push_back(Vector(&this->location, 0, 1, -2));
+    vec->push_back(Vector(&this->location, 0, -1, 2));
+    vec->push_back(Vector(&this->location, 0, -1, -2));
+    vec->push_back(Vector(&this->location, 0, 2, 1));
+    vec->push_back(Vector(&this->location, 0, 2, -1));
+    vec->push_back(Vector(&this->location, 0, -2, 1));
+    vec->push_back(Vector(&this->location, 0, -2, -1));
+
+    break;
   case BISHOP:
-    return 3;
+    this->value = 3;
+    vec->push_back(Vector(&this->location, 0, 1, 1));
+    vec->push_back(Vector(&this->location, 0, 1, -1));
+    vec->push_back(Vector(&this->location, 0, -1, 1));
+    vec->push_back(Vector(&this->location, 0, -1, -1));
+
+    break;
   case ROOK:
-    return 5;
+    this->value = 5;
+    vec->push_back(Vector(&this->location, 0, 0, 1));
+    vec->push_back(Vector(&this->location, 0, 0, -1));
+    vec->push_back(Vector(&this->location, 0, 1, 0));
+    vec->push_back(Vector(&this->location, 0, -1, 0));
+
+    break;
   default:
-    return 0;
+    throw std::runtime_error("Invalid piece type");
   }
+}
+
+Piece::Piece(char c, Location location)
+{
+  this->location = location;
+  this->isOnBoard = true;
+  this->views = {};
+  this->moves = {};
+
+  if (c >= 'a' && c <= 'z')
+  {
+    this->color = BLACK;
+  }
+  else
+  {
+    this->color = WHITE;
+    c = c + 32;
+  }
+
+  switch (c)
+  {
+  case 'k':
+    this->type = KING;
+    break;
+  case 'q':
+    this->type = QUEEN;
+    break;
+  case 'p':
+    this->type = PAWN;
+    break;
+  case 'n':
+    this->type = KNIGHT;
+    break;
+  case 'b':
+    this->type = BISHOP;
+    break;
+  case 'r':
+    this->type = ROOK;
+    break;
+  default:
+    throw std::runtime_error("Invalid piece type");
+  }
+
+  this->init(&views);
+  this->init(&moves);
+}
+
+Square::Square()
+{
+  this->occupied = false;
+  this->piece = nullptr;
+  this->viewsMapBlack = {};
+  this->viewsMapWhite = {};
+}
+
+Location util::XY(uint8_t x, uint8_t y)
+{
+  Location location;
+  location.x = x;
+  location.y = y;
+  return location;
+}
+
+Move util::newMove(Location from, Location to)
+{
+  Move move;
+  move.from = from;
+  move.to = to;
+  return move;
+}
+
+Vector::Vector(Location *start, u_int8_t len, int8_t incx, int8_t incy)
+{
+  this->start = start;
+  this->len = len;
+  this->incx = incx;
+  this->incy = incy;
+}
+
+Piece::~Piece()
+{
+  // don't double free
+}
+
+Location Vector::operator[](u_int8_t i)
+{
+  Location loc;
+  loc.x = start->x + incx * (i + 1);
+  loc.y = start->y + incy * (i + 1);
+  return loc;
+}
+
+PieceColor operator!(PieceColor& c)
+{
+  return static_cast<PieceColor>(!static_cast<bool>(c));
 }

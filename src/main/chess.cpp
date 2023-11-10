@@ -15,35 +15,37 @@ using namespace std;
 int MAIN()
 {
 
-  Board board = Board();
+  // // Board board = Board();
 
 
-  // let two players play the game, using command line input
-  while (true)
-  {
-    cout << board.board.toString() << endl;
+  // // let two players play the game, using command line input
+  // while (true)
+  // {
+  //   // cout << board.board.toString() << endl;
 
-    cout << "Enter move: " ;
-    string moveStr;
-    cin >> moveStr;
+  //   cout << "Enter move: " ;
+  //   string moveStr;
+  //   cin >> moveStr;
 
-    if (moveStr == "q")
-    {
-      break;
-    }
+  //   if (moveStr == "q")
+  //   {
+  //     break;
+  //   }
 
-    // parse move string
-    int fromX = moveStr[0] - 'a';
-    int fromY = moveStr[1] - '1';
-    int toX = moveStr[2] - 'a';
-    int toY = moveStr[3] - '1';
+  //   // parse move string
+  //   int fromX = moveStr[0] - 'a';
+  //   int fromY = moveStr[1] - '1';
+  //   int toX = moveStr[2] - 'a';
+  //   int toY = moveStr[3] - '1';
 
-    Location from = make_tuple(fromX, fromY);
-    Location to = make_tuple(toX, toY);
-    Move move = make_tuple(from, to);
+  //   // Location from = make_tuple(fromX, fromY);
+  //   // Location to = make_tuple(toX, toY);
+  //   // Move move = make_tuple(from, to);
 
-    board.moveIfAble(move);
-  }
+  //   // board.moveIfAble(move);
+//   }
 
-  return 0;
+//   return 0;
+// }
+return 0;
 }
