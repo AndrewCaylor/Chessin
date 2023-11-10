@@ -54,12 +54,12 @@ void BoardManager::pawnCast(Piece *piece, ViewInd ind)
   else if (ind == 1 || ind == 2)
   {
     Location side = piece->views[ind][0];
-    bool canMove = board.isValidLocation(side) && board.getPiece(side) != nullptr && board.getPiece(side)->color != piece->color;
 
-    /// TODO: this never changes. Set this once somewhere else
-    piece->views[ind].len = 1;
+    bool isValid = board.isValidLocation(side);
+    bool canMove = isValid && board.getPiece(side) != nullptr && board.getPiece(side)->color != piece->color;
 
-    canMove ? piece->moves[ind].len = 1 : piece->moves[ind].len = 0;
+    piece->views[ind].len = isValid ? 1 : 0;
+    piece->moves[ind].len = canMove ? 1 : 0;
   }
   else
   {

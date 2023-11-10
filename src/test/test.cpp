@@ -47,6 +47,7 @@ string getView(BoardData b, PieceColor color, bool doNewline = false)
     }
     if (doNewline) out += "\n";
   }
+  if (doNewline) out += "\n";
   return out;
 }
 
@@ -56,13 +57,14 @@ TEST(Tests, test_in_check)
                            "........",
                            "........",
                            "........",
-                           "....R...",
+                           "....Rr..",
                            "........",
                            "........",
                            "....K..."});
 
   BoardManager bm = BoardManager(b);
   EXPECT_TRUE(b.isInCheck(PieceColor::BLACK));
+  EXPECT_FALSE(b.isInCheck(PieceColor::WHITE));
 }
 
 TEST(Tests, test_vision_king)
@@ -121,26 +123,123 @@ TEST(Tests, test_vision_queen)
   EXPECT_EQ(view, expectedVisionBlack);
 }
 
-TEST(Tests, test_move)
+TEST(Tests, visionKnight)
 {
-  BoardData b = BoardData({"....k...",
+  BoardData b = BoardData({"........",
+                           ".P......",
+                           "....K...",
                            "........",
                            "........",
-                           "......r.",
-                           "..R.....",
+                           ".......n",
+                           "........",
+                           "k......."});
+
+  BoardManager bm = BoardManager(b);
+
+  string expectedVisionBlack = 
+    "........"
+    "........"
+    "........"
+    "......1."
+    ".....1.."
+    "........"
+    "11...1.."
+    ".1....1.";
+
+  string view = getView(b, PieceColor::BLACK);
+
+  EXPECT_EQ(view, expectedVisionBlack);
+}
+
+TEST(Tests, visionPawn)
+{
+  BoardData b = BoardData({"...k....",
+                           "........",
+                           "........",
+                           "........",
+                           "........",
+                           "....P...",
+                           ".......P",
+                           "K......."});
+
+  BoardManager bm = BoardManager(b);
+
+  string expectedVisionWhite = 
+    "........"
+    "........"
+    "........"
+    "........"
+    "...111.1"
+    "......11"
+    "11......"
+    ".1......";
+
+  string view = getView(b, PieceColor::WHITE);
+
+  EXPECT_EQ(view, expectedVisionWhite);
+}
+
+TEST(Tests, movePiece)
+{
+  BoardData b = BoardData({".....k..",
+                           "........",
+                           ".....r..",
+                           "........",
+                           "...R....",
                            "........",
                            "........",
                            "....K..."});
 
   BoardManager bm = BoardManager(b);
-  cout << getView(b, PieceColor::WHITE);
-  cout << getView(b, PieceColor::BLACK);
+  Piece *bRook = b.getPiece(XY(5, 5));
 
-  Piece *bRook = b.getPiece(XY(6, 4));
-  bm.movePiece(bRook, XY(6, 3));
+  // cout << "WHITE" << endl;
+  // cout << getView(b, PieceColor::WHITE, true);
+  // cout << "BLACK" << endl;
+  // cout << getView(b, PieceColor::BLACK, true);
 
-  // printView(b, PieceColor::WHITE);
-  // printView(b, PieceColor::BLACK);
+  bm.movePiece(bRook, XY(5, 3));
 
-  EXPECT_TRUE(b.isInCheck(PieceColor::BLACK));
+  EXPECT_EQ(b.toString(),
+          ".....k.. 8\n"
+          "........ 7\n"
+          "........ 6\n"
+          "........ 5\n"
+          "...R.r.. 4\n"
+          "........ 3\n"
+          "........ 2\n"
+          "....K... 1\n"
+          "\n"
+          "abcdefgh\n");
+
+  string expectedVisionBlack = 
+    "....111."
+    "....121."
+    ".....1.."
+    ".....1.."
+    "...11.11"
+    ".....1.."
+    ".....1.."
+    ".....1..";
+
+  string expectedVisionWhite = 
+    "...1...."
+    "...1...."
+    "...1...."
+    "...1...."
+    "111.11.."
+    "...1...."
+    "...211.."
+    "...2.1..";
+
+  string viewBlack = getView(b, PieceColor::BLACK);
+  EXPECT_EQ(viewBlack, expectedVisionBlack);
+
+  string viewWhite = getView(b, PieceColor::BLACK);
+  EXPECT_EQ(viewWhite, expectedVisionBlack);
+
+  // cout << "WHITE" << endl;
+  // cout << getView(b, PieceColor::WHITE, true);
+  // cout << "BLACK" << endl;
+  // cout << getView(b, PieceColor::BLACK, true);
 }
