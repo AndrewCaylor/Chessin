@@ -127,12 +127,7 @@ void BoardManager::cast(uint8_t startInd, Piece *piece, ViewInd viewInd, uint8_t
 
 // TODO (efficiency): process pinned pieces first, determine axis they are pinned on
 // now we can prune the moves beforehand so we dont need to check them for every possiuble move
-// idk this is explained poorly but you get tht eidea
-
-BoardManager::BoardManager()
-{
-  this->board = BoardData();
-}
+// idk this is explained poorly but you get the idea
 
 int BoardManager::getDistance(Location from, Location to)
 {
@@ -225,10 +220,8 @@ void BoardManager::createVision(Piece *piece)
   }
 }
 
-BoardManager::BoardManager(const BoardData &board)
+BoardManager::BoardManager(BoardData &board) : board(board)
 {
-  this->board = board;
-
   for (size_t i = 0; i < board.whitePieces.size(); i++)
   {
     Piece *piece = board.whitePieces[i];

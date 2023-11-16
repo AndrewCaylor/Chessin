@@ -2,7 +2,7 @@
 #include <boardData.hpp>
 #include <board.hpp>
 
-TEST(Tests, test_string_constructor)
+TEST(Tests, StringConstructor)
 {
   BoardData b = BoardData({"rnbqkbnr",
                            "pppppppp",
@@ -28,7 +28,7 @@ TEST(Tests, test_string_constructor)
             "abcdefgh\n");
 }
 
-string getView(BoardData b, PieceColor color, bool doNewline = false)
+string getView(BoardData &b, PieceColor color, bool doNewline = false)
 {
   string out = "";
   for (int y = 7; y >= 0; y--)
@@ -352,31 +352,31 @@ TEST(Tests, rookCapture)
             "abcdefgh\n");
 
   string expectedVisionWhite =
-    "........"
-    "........"
-    "........"
-    "........"
-    "........"
-    "........"
-    "...111.."
-    "...1.1..";
+      "........"
+      "........"
+      "........"
+      "........"
+      "........"
+      "........"
+      "...111.."
+      "...1.1..";
 
   string expectedVisionBlack =
-    "1...1.1."
-    "1...111."
-    ".1111111"
-    "1......."
-    "1......."
-    "1......."
-    "1......."
-    "1.......";
+      "1...1.1."
+      "1...111."
+      ".1111111"
+      "1......."
+      "1......."
+      "1......."
+      "1......."
+      "1.......";
 
   string viewBlack = getView(b, PieceColor::BLACK);
   EXPECT_EQ(viewBlack, expectedVisionBlack);
 
   string viewWhite = getView(b, PieceColor::WHITE);
   EXPECT_EQ(viewWhite, expectedVisionWhite);
-  
+
   EXPECT_EQ(amtVision(wRook), 0);
   EXPECT_EQ(numMoves(wRook), 0);
 }

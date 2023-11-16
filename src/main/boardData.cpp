@@ -7,7 +7,7 @@ Piece *BoardData::getPiece(Location loc)
   {
     throw runtime_error("getPiece: Invalid location");
   }
-  return board[loc.y][loc.x]->piece;
+  return board[loc.y][loc.x].piece;
 }
 
 void BoardData::setPiece(Location loc, Piece *piece)
@@ -16,17 +16,17 @@ void BoardData::setPiece(Location loc, Piece *piece)
   {
     throw runtime_error("setPiece: Invalid location");
   }
-  Square *square = board[loc.y][loc.x];
+  Square &square = board[loc.y][loc.x];
 
   // push whatever piece (or nullptr) was there onto the history stack
-  square->pieceHistory.push(square->piece);
+  square.pieceHistory.push(square.piece);
   // when a piece is removed from the board, remove lines of sight
-  if (square->piece != nullptr)
+  if (square.piece != nullptr)
   {
-    removeVision(square->piece);
+    removeVision(square.piece);
   }
 
-  square->piece = piece;
+  square.piece = piece;
   if (piece != nullptr)
     piece->location = loc;
 }
@@ -37,10 +37,10 @@ void BoardData::revertSquare(Location loc)
   {
     throw runtime_error("revertSquare: Invalid location");
   }
-  Square *square = board[loc.y][loc.x];
-  Piece *piece = square->pieceHistory.top();
-  square->pieceHistory.pop();
-  square->piece = piece;
+  Square &square = board[loc.y][loc.x];
+  Piece *piece = square.pieceHistory.top();
+  square.pieceHistory.pop();
+  square.piece = piece;
 }
 
 string BoardData::toString()
@@ -72,10 +72,10 @@ BoardData::BoardData()
 {
   for (int y = 0; y < 8; y++)
   {
-    vector<Square *> row;
+    vector<Square> row;
     for (int x = 0; x < 8; x++)
     {
-      row.push_back(new Square());
+      row.push_back(Square());
     }
     board.push_back(row);
   }
@@ -83,22 +83,14 @@ BoardData::BoardData()
 
 BoardData::~BoardData()
 {
-  // for (size_t i = 0; i < board.size(); i++)
-  // {
-  //   for (size_t j = 0; j < board[i].size(); j++)
-  //   {
-  //     delete board[i][j];
-  //   }
-  // }
-
-  // for (size_t i = 0; i < whitePieces.size(); i++)
-  // {
-  //   delete whitePieces[i];
-  // }
-  // for (size_t i = 0; i < blackPieces.size(); i++)
-  // {
-  //   delete blackPieces[i];
-  // }
+  for (size_t i = 0; i < whitePieces.size(); i++)
+  {
+    delete whitePieces[i];
+  }
+  for (size_t i = 0; i < blackPieces.size(); i++)
+  {
+    delete blackPieces[i];
+  }
 }
 
 bool BoardData::isValidLocation(Location location)
@@ -112,10 +104,10 @@ BoardData::BoardData(vector<string> boardstr)
 {
   for (int y = 0; y < 8; y++)
   {
-    vector<Square *> row;
+    vector<Square> row;
     for (int x = 0; x < 8; x++)
     {
-      row.push_back(new Square());
+      row.push_back(Square());
     }
     board.push_back(row);
   }
@@ -189,7 +181,7 @@ void BoardData::removeVision(Piece *piece, ViewInd viewInd, uint8_t start, uint8
     for (uint8_t j = start; j < end; j++)
     {
       Location loc = piece->views[viewInd][j];
-      board[loc.y][loc.x]->viewsMapWhite.erase(piece);
+      board[loc.y][loc.x].viewsMapWhite.erase(piece);
     }
   }
   else
@@ -197,7 +189,7 @@ void BoardData::removeVision(Piece *piece, ViewInd viewInd, uint8_t start, uint8
     for (uint8_t j = start; j < end; j++)
     {
       Location loc = piece->views[viewInd][j];
-      board[loc.y][loc.x]->viewsMapBlack.erase(piece);
+      board[loc.y][loc.x].viewsMapBlack.erase(piece);
     }
   }
 }
@@ -214,7 +206,7 @@ void BoardData::setVision(Piece *piece, ViewInd viewInd, uint8_t start, uint8_t 
     for (uint8_t j = start; j < end; j++)
     {
       Location loc = piece->views[viewInd][j];
-      board[loc.y][loc.x]->viewsMapWhite[piece] = viewInd;
+      board[loc.y][loc.x].viewsMapWhite[piece] = viewInd;
     }
   }
   else
@@ -222,7 +214,7 @@ void BoardData::setVision(Piece *piece, ViewInd viewInd, uint8_t start, uint8_t 
     for (uint8_t j = start; j < end; j++)
     {
       Location loc = piece->views[viewInd][j];
-      board[loc.y][loc.x]->viewsMapBlack[piece] = viewInd;
+      board[loc.y][loc.x].viewsMapBlack[piece] = viewInd;
     }
   }
 }
@@ -259,27 +251,27 @@ void BoardData::setVision(Piece *piece)
 
 vector<tuple<Piece *, ViewInd>> BoardData::getViews(Location loc, PieceColor c)
 {
-  Square *square = board[loc.y][loc.x];
+  Square &square = board[loc.y][loc.x];
   if (c == WHITE)
   {
-    return vector<tuple<Piece *, ViewInd>>(square->viewsMapWhite.begin(), square->viewsMapWhite.end());
+    return vector<tuple<Piece *, ViewInd>>(square.viewsMapWhite.begin(), square.viewsMapWhite.end());
   }
   else
   {
-    return vector<tuple<Piece *, ViewInd>>(square->viewsMapBlack.begin(), square->viewsMapBlack.end());
+    return vector<tuple<Piece *, ViewInd>>(square.viewsMapBlack.begin(), square.viewsMapBlack.end());
   }
 }
 
 int BoardData::getNumViewers(Location loc, PieceColor c)
 {
-  Square *square = board[loc.y][loc.x];
+  Square &square = board[loc.y][loc.x];
   if (c == WHITE)
   {
-    return square->viewsMapWhite.size();
+    return square.viewsMapWhite.size();
   }
   else
   {
-    return square->viewsMapBlack.size();
+    return square.viewsMapBlack.size();
   }
 }
 

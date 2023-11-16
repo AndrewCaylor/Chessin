@@ -15,37 +15,37 @@
 class BoardManager
 {
 private:
-  void calcPawnVision(Piece* piece);
-  void calcKVision(Piece* piece);
+  void calcPawnVision(Piece *piece);
+  void calcKVision(Piece *piece);
 
-  vector<Location> kingCast(Piece* piece);
+  vector<Location> kingCast(Piece *piece);
 
   void cast(uint8_t startInd, Piece *piece, ViewInd viewInd, uint8_t endInd = 255);
   void pawnCast(Piece *piece, ViewInd ind);
 
   /**
    * Update a view for a piece when another piece is moved
-  */
-  void updateView(Piece* piece, char viewInd);
+   */
+  void updateView(Piece *piece, char viewInd);
 
-  void createVision(Piece* piece);
+  void createVision(Piece *piece);
 
   bool isValid(Move move);
 
-  void cutView(Piece *piece, ViewInd viewInd, Piece *interpos);
+  void cutView(Piece *piece, ViewInd vie1wInd, Piece *interpos);
   void extendView(Piece *piece, ViewInd viewInd, Location interpos);
 
   int getDistance(Location from, Location to);
 
 public:
-  BoardData board;
+  BoardData &board;
 
   BoardManager();
-  BoardManager(const BoardData &board);
+  BoardManager(BoardData &board);
 
   bool isCheckmated(PieceColor color);
 
-  void movePiece(Piece* piece, Location location);
+  void movePiece(Piece *piece, Location location);
 
   float getEval();
 };

@@ -10,12 +10,22 @@
 using namespace std;
 using namespace util;
 
-typedef vector<vector<Square *>> Board;
+typedef vector<vector<Square>> Board;
 
+/**
+ * BoardData
+ * 
+ * This class is responsible for storing the state of the board.
+ * Provides basic functions for manipulating the board.
+ * Does not know anything about the rules of chess.
+*/
 class BoardData
 {
 private:
   Board board = {};
+  
+  // Disallow copying, since we need to manage the memory of the pieces
+  BoardData(const BoardData &other);
 
   // pinned pieces?? (for detecting in_check early)
 
