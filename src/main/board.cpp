@@ -140,23 +140,24 @@ void BoardManager::extendView(Piece *piece, ViewInd viewInd, Location interpos)
 {
   PieceType type = piece->type;
 
+  int extendFromInd = 0;
   switch (type)
   {
   case KNIGHT:
-    piece->moves[viewInd].len = 1;
-    return;
+    cast(extendFromInd, piece, viewInd, 0);
+    break;
   case KING:
-    piece->moves[viewInd].len = 1;
-    return;
+    cast(extendFromInd, piece, viewInd, 0);
+    break;
   case PAWN:
     pawnCast(piece, viewInd);
-    return;
+    break;
   default:
+    extendFromInd = getDistance(piece->location, interpos);
+    cast(extendFromInd, piece, viewInd);
     break;
   }
 
-  int extendFromInd = getDistance(piece->location, interpos);
-  cast(extendFromInd, piece, viewInd);
   board.setVision(piece, viewInd, extendFromInd);
 }
 

@@ -266,6 +266,29 @@ TEST(Tests, movePiece)
   // cout << getView(b, PieceColor::BLACK, true);
 }
 
+
+TEST(Tests, movePieceKnight)
+{
+  BoardData b({".....k..",
+               "........",
+               "........",
+               "........",
+               "........",
+               "......p.",
+               "........",
+               "K....P.N"});
+
+  BoardManager bm(b);
+  Piece *wKnight = b.getPiece(XY(7, 0));
+  Piece *wPawn = b.getPiece(XY(5, 0));
+
+  EXPECT_EQ(numMoves(wKnight), 2);
+
+  bm.movePiece(wPawn, XY(5, 1));
+
+  EXPECT_EQ(numMoves(wKnight), 1);
+}
+
 TEST(Tests, attacksPawn)
 {
   BoardData b({"...k....",
