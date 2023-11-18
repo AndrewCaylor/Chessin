@@ -4,14 +4,14 @@
 
 TEST(Tests, StringConstructor)
 {
-  BoardData b = BoardData({"rnbqkbnr",
-                           "pppppppp",
-                           "........",
-                           "........",
-                           "........",
-                           "........",
-                           "PPPPPPPP",
-                           "RNBQKBNR"});
+  BoardData b({"rnbqkbnr",
+               "pppppppp",
+               "........",
+               "........",
+               "........",
+               "........",
+               "PPPPPPPP",
+               "RNBQKBNR"});
 
   std::cout << b.toString() << std::endl;
 
@@ -75,32 +75,32 @@ int amtVision(Piece *piece)
 
 TEST(Tests, test_in_check)
 {
-  BoardData b = BoardData({"....k...",
-                           "........",
-                           "........",
-                           "........",
-                           "....Rr..",
-                           "........",
-                           "........",
-                           "....K..."});
+  BoardData b({"....k...",
+               "........",
+               "........",
+               "........",
+               "....Rr..",
+               "........",
+               "........",
+               "....K..."});
 
-  BoardManager bm = BoardManager(b);
+  BoardManager bm(b);
   EXPECT_TRUE(b.isInCheck(PieceColor::BLACK));
   EXPECT_FALSE(b.isInCheck(PieceColor::WHITE));
 }
 
 TEST(Tests, test_vision_king)
 {
-  BoardData b = BoardData({"....k...",
-                           "........",
-                           "........",
-                           "........",
-                           "....R...",
-                           "........",
-                           "........",
-                           "....K..."});
+  BoardData b({"....k...",
+               "........",
+               "........",
+               "........",
+               "....R...",
+               "........",
+               "........",
+               "....K..."});
 
-  BoardManager bm = BoardManager(b);
+  BoardManager bm(b);
 
   string expectedVisionBlack =
       "...1.1.."
@@ -119,16 +119,16 @@ TEST(Tests, test_vision_king)
 
 TEST(Tests, test_vision_queen)
 {
-  BoardData b = BoardData({"........",
-                           ".P......",
-                           "....K...",
-                           "........",
-                           "....q...",
-                           "........",
-                           "........",
-                           "k......."});
+  BoardData b({"........",
+               ".P......",
+               "....K...",
+               "........",
+               "....q...",
+               "........",
+               "........",
+               "k......."});
 
-  BoardManager bm = BoardManager(b);
+  BoardManager bu(b);
 
   string expectedVisionBlack =
       "........"
@@ -147,16 +147,16 @@ TEST(Tests, test_vision_queen)
 
 TEST(Tests, visionKnight)
 {
-  BoardData b = BoardData({"........",
-                           ".P......",
-                           "....K...",
-                           "........",
-                           "........",
-                           ".......n",
-                           "........",
-                           "k......."});
+  BoardData b({"........",
+               ".P......",
+               "....K...",
+               "........",
+               "........",
+               ".......n",
+               "........",
+               "k......."});
 
-  BoardManager bm = BoardManager(b);
+  BoardManager bm(b);
 
   string expectedVisionBlack =
       "........"
@@ -175,16 +175,16 @@ TEST(Tests, visionKnight)
 
 TEST(Tests, visionPawn)
 {
-  BoardData b = BoardData({"...k....",
-                           "........",
-                           "........",
-                           "........",
-                           "........",
-                           "....P...",
-                           ".......P",
-                           "K......."});
+  BoardData b({"...k....",
+               "........",
+               "........",
+               "........",
+               "........",
+               "....P...",
+               ".......P",
+               "K......."});
 
-  BoardManager bm = BoardManager(b);
+  BoardManager bm(b);
 
   string expectedVisionWhite =
       "........"
@@ -203,16 +203,16 @@ TEST(Tests, visionPawn)
 
 TEST(Tests, movePiece)
 {
-  BoardData b = BoardData({".....k..",
-                           "........",
-                           ".....r..",
-                           "........",
-                           "...R....",
-                           "........",
-                           "........",
-                           "....K..."});
+  BoardData b({".....k..",
+               "........",
+               ".....r..",
+               "........",
+               "...R....",
+               "........",
+               "........",
+               "....K..."});
 
-  BoardManager bm = BoardManager(b);
+  BoardManager bm(b);
   Piece *bRook = b.getPiece(XY(5, 5));
 
   // cout << "WHITE" << endl;
@@ -268,16 +268,16 @@ TEST(Tests, movePiece)
 
 TEST(Tests, attacksPawn)
 {
-  BoardData b = BoardData({"...k....",
-                           "........",
-                           "........",
-                           "...p....",
-                           ".....Pp.",
-                           "....P...",
-                           ".......P",
-                           "K......."});
+  BoardData b({"...k....",
+               "........",
+               "........",
+               "...p....",
+               ".....Pp.",
+               "....P...",
+               ".......P",
+               "K......."});
 
-  BoardManager bm = BoardManager(b);
+  BoardManager bm(b);
 
   Piece *p1W = b.getPiece(XY(4, 2));
   EXPECT_EQ(numMoves(p1W), 1);
@@ -298,16 +298,16 @@ TEST(Tests, attacksPawn)
 
 TEST(Tests, attacksBishop)
 {
-  BoardData b = BoardData({"...k....",
-                           "........",
-                           "........",
-                           "........",
-                           "...p....",
-                           "R.......",
-                           ".B......",
-                           "K.R....B"});
+  BoardData b({"...k....",
+               "........",
+               "........",
+               "........",
+               "...p....",
+               "R.......",
+               ".B......",
+               "K.R....B"});
 
-  BoardManager bm = BoardManager(b);
+  BoardManager bm(b);
   Piece *bishop1 = b.getPiece(XY(1, 1));
   Piece *bishop2 = b.getPiece(XY(7, 0));
   Piece *pawn = b.getPiece(XY(3, 3));
@@ -324,16 +324,16 @@ TEST(Tests, attacksBishop)
 
 TEST(Tests, rookCapture)
 {
-  BoardData b = BoardData({".....k..",
-                           "........",
-                           "R....r..",
-                           "........",
-                           "........",
-                           "........",
-                           "........",
-                           "....K..."});
+  BoardData b({".....k..",
+               "........",
+               "R....r..",
+               "........",
+               "........",
+               "........",
+               "........",
+               "....K..."});
 
-  BoardManager bm = BoardManager(b);
+  BoardManager bm(b);
   Piece *bRook = b.getPiece(XY(5, 5));
   Piece *wRook = b.getPiece(XY(0, 5));
 
