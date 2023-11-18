@@ -64,7 +64,6 @@ public:
 
   Piece(PieceType type, PieceColor color, Location location);
   Piece(char c, Location location);
-  ~Piece();
   int getValue();
   char toChar();
 };

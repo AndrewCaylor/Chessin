@@ -202,11 +202,6 @@ Vector::Vector(Location *start, u_int8_t len, int8_t incx, int8_t incy)
   this->incy = incy;
 }
 
-Piece::~Piece()
-{
-  // don't double free
-}
-
 Location Vector::operator[](u_int8_t i)
 {
   Location loc;
